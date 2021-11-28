@@ -1,13 +1,17 @@
 project(sigil LANGUAGES C CXX)
 
 set(${PROJECT_NAME}_HEADERS
-    Specification.h
+    CharSet.h
     Grammar.h
+    Nfa.h
+    Specification.h
 )
 
 set(${PROJECT_NAME}_SOURCES
-    Specification.cpp
+    CharSet.cpp
     Grammar.cpp
+    Nfa.cpp
+    Specification.cpp
 )
 
 add_library(${PROJECT_NAME}
