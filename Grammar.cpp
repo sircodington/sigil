@@ -55,7 +55,6 @@ Either<StringView, Grammar> sigil::Grammar::compile(
             return Result::left("failed to create nfa for token");
         }
 
-        // @TODO: Figure out why Logger<const T &> isn't working
         // @TODO: Automaton can't be copied! Is this our Lists fault?
 
         nfa::Automaton::log(nfas[i]);
