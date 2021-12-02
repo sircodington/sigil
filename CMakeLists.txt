@@ -4,6 +4,8 @@ set(${PROJECT_NAME}_HEADERS
     CharSet.h
     Grammar.h
     Nfa.h
+    RegExp.h
+    RegexParser.h
     Specification.h
 )
 
@@ -11,6 +13,8 @@ set(${PROJECT_NAME}_SOURCES
     CharSet.cpp
     Grammar.cpp
     Nfa.cpp
+    RegExp.cpp
+    RegexParser.cpp
     Specification.cpp
 )
 
