@@ -6,7 +6,7 @@
 
 #include "Grammar.h"
 
-#include <core/Logging.h>
+#include <core/Formatting.h>
 #include <sigil/Nfa.h>
 
 namespace sigil {
@@ -57,8 +57,9 @@ Either<StringView, Grammar> sigil::Grammar::compile(
 
         // @TODO: Automaton can't be copied! Is this our Lists fault?
 
-        nfa::Automaton::log(nfas[i]);
-        core::Logging::log("\n");
+        core::StringBuilder builder;
+        nfa::Automaton::format(builder, nfas[i]);
+        debug_log(builder.toString(), "\n");
     }
 
     Grammar grammar;

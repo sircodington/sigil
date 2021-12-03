@@ -6,7 +6,7 @@
 
 #include "CharSet.h"
 
-#include <core/Logging.h>
+#include <core/Formatting.h>
 
 namespace sigil {
 
@@ -21,20 +21,21 @@ CharSet::CharSet(u8 first, u8 last)
 
 namespace core {
 
-void Logger<sigil::CharSet>::log(const sigil::CharSet &char_set)
+void Formatter<sigil::CharSet>::format(
+    StringBuilder &b, const sigil::CharSet &char_set)
 {
     bool first = true;
     for (auto i = sigil::CharSet::first; i <= sigil::CharSet::last; ++i) {
         const auto c = char(i);
         if (char_set.contains(c)) {
             if (not first)
-                Logging::log(",");
+                Formatting::format_into(b, ",");
             first = false;
 
             if (' ' <= c and c <= '~') {
-                Logging::log("'", c, "'");
+                Formatting::format_into(b, "'", c, "'");
             } else {
-                Logging::log(i);
+                Formatting::format_into(b, i);
             }
         }
     }

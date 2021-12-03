@@ -6,7 +6,7 @@
 
 #include "RegexParser.h"
 
-#include <core/Logging.h>
+#include <core/Formatting.h>
 #include <sigil/RegExp.h>
 
 namespace sigil {

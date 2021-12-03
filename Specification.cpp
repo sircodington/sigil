@@ -6,7 +6,7 @@
 
 #include "Specification.h"
 
-#include <core/Logging.h>
+#include <core/Formatting.h>
 
 namespace sigil {
 
@@ -35,25 +35,26 @@ void Specification::add_regex_token(StringView token_name, StringView regex)
 
 namespace core {
 
-void Logger<sigil::Specification::TokenSpec::Type>::log(
-    sigil::Specification::TokenSpec::Type value)
+void Formatter<sigil::Specification::TokenSpec::Type>::format(
+    StringBuilder &b, sigil::Specification::TokenSpec::Type value)
 {
     switch (value) {
         case sigil::Specification::TokenSpec::Type::Literal:
-            Logging::log("Literal");
+            Formatting::format_into(b, "Literal");
             break;
         case sigil::Specification::TokenSpec::Type::Regex:
-            Logging::log("Regex");
+            Formatting::format_into(b, "Regex");
             break;
         case sigil::Specification::TokenSpec::Type::Invalid:
         default: assert(false and "Unreachable");
     }
 }
 
-void Logger<sigil::Specification::TokenSpec>::log(
-    const sigil::Specification::TokenSpec &token_spec)
+void Formatter<sigil::Specification::TokenSpec>::format(
+    StringBuilder &b, const sigil::Specification::TokenSpec &token_spec)
 {
-    Logging::log(
+    Formatting::format_into(
+        b,
         "TokenSpec( ",
         token_spec.type,
         ", ",

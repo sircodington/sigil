@@ -8,7 +8,7 @@
 
 #include <cassert>
 
-#include <core/Logging.h>
+#include <core/Formatting.h>
 
 namespace sigil {
 
@@ -59,44 +59,46 @@ Optional::Optional(RegExp *exp)
 
 namespace core {
 
-void Logger<sigil::RegExp>::log(const sigil::RegExp &value)
+void Formatter<sigil::RegExp>::format(
+    StringBuilder &b, const sigil::RegExp &value)
 {
     switch (value.type()) {
         case sigil::RegExp::Type::Atom: {
             const auto &exp = reinterpret_cast<const sigil::Atom &>(value);
-            Logging::log("Atom('", exp.value(), "')");
+            Formatting::format_into(b, "Atom('", exp.value(), "')");
         } break;
 
         case sigil::RegExp::Type::Alternative: {
             const auto &exp =
                 reinterpret_cast<const sigil::Alternative &>(value);
-            Logging::log("Alternative(", exp.left(), ", ", exp.right(), ")");
+            Formatting::format_into(
+                b, "Alternative(", exp.left(), ", ", exp.right(), ")");
         } break;
 
         case sigil::RegExp::Type::Concatenation: {
             const auto &exp =
                 reinterpret_cast<const sigil::Concatenation &>(value);
-            Logging::log("Concatenation(", exp.left(), ", ", exp.right(), ")");
+            Formatting::format_into(
+                b, "Concatenation(", exp.left(), ", ", exp.right(), ")");
         } break;
 
         case sigil::RegExp::Type::Kleene: {
             const auto &exp = reinterpret_cast<const sigil::Kleene &>(value);
-            Logging::log("Kleene(", exp.exp(), "')");
+            Formatting::format_into(b, "Kleene(", exp.exp(), "')");
         } break;
 
         case sigil::RegExp::Type::PositiveKleene: {
             const auto &exp =
                 reinterpret_cast<const sigil::PositiveKleene &>(value);
-            Logging::log("PositiveKleene(", exp.exp(), "')");
+            Formatting::format_into(b, "PositiveKleene(", exp.exp(), "')");
         } break;
 
         case sigil::RegExp::Type::Optional: {
             const auto &exp = reinterpret_cast<const sigil::Optional &>(value);
-            Logging::log("Optional(",exp.exp(), "')");
+            Formatting::format_into(b, "Optional(", exp.exp(), "')");
         } break;
 
-        default:
-            assert(false and "Unreachable");
+        default: assert(false and "Unreachable");
     }
 }
 

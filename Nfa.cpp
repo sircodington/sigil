@@ -6,7 +6,7 @@
 
 #include "Nfa.h"
 
-#include <core/Logging.h>
+#include <core/Formatting.h>
 
 namespace sigil::nfa {
 
@@ -41,48 +41,49 @@ Arc *Automaton::create_arc(const State *origin, const State *target)
     return arc;
 }
 
-inline static void log_state(const State &state)
+inline static void log_state(core::StringBuilder &b, const State &state)
 {
     if (state.accepting)
-        Logging::log("(");
+        Formatting::format_into(b, "(");
     if (state.start)
-        Logging::log("*");
-    Logging::log(state.id);
+        Formatting::format_into(b, "*");
+    Formatting::format_into(b, state.id);
     if (state.accepting)
-        Logging::log(")");
+        Formatting::format_into(b, ")");
 }
 
-inline static void log_indentation(int level)
+inline static void format_indentation(core::StringBuilder &b, int level)
 {
-    for (auto i = 0; i < level; ++i) Logging::log("  ");
+    for (auto i = 0; i < level; ++i) Formatting::format_into(b, "  ");
 }
 
-void Automaton::log(const nfa::Automaton &automaton)
+void Automaton::format(core::StringBuilder &b, const nfa::Automaton &automaton)
 {
-    Logging::log("nfa::Automaton {\n");
+    Formatting::format_into(b, "nfa::Automaton {\n");
     for (const auto state : automaton.states()) {
-        log_indentation(1);
-        log_state(*state);
-        Logging::log("\n");
+        format_indentation(b, 1);
+        log_state(b, *state);
+    Formatting:
+        Formatting::format_into(b, "\n");
 
         for (const auto arc : automaton.arcs()) {
             if (arc->origin != state)
                 continue;
 
-            log_indentation(2);
-            Logging::log("--- ");
+            format_indentation(b, 2);
+            Formatting::format_into(b, "--- ");
 
-            core::Logging::log(arc->char_set);
+            core::Formatting::format_into(b, arc->char_set);
             if (arc->epsilon) {
-                core::Logging::log(", epsilon");
+                core::Formatting::format_into(b, ", epsilon");
             }
 
-            Logging::log(" ---> ");
-            log_state(*arc->target);
-            Logging::log("\n");
+            Formatting::format_into(b, " ---> ");
+            log_state(b, *arc->target);
+            Formatting::format_into(b, "\n");
         }
     }
-    Logging::log("}");
+    Formatting::format_into(b, "}");
 }
 
 }  // namespace sigil::nfa

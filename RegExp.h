@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <core/Logger.h>
+#include <core/Formatter.h>
 #include <core/Types.h>
 
 namespace sigil {
@@ -109,10 +109,10 @@ private:
 namespace core {
 
 template<>
-class Logger<sigil::RegExp>
+class Formatter<sigil::RegExp>
 {
 public:
-    static void log(const sigil::RegExp &);
+    static void format(StringBuilder &, const sigil::RegExp &);
 };
 
 }  // namespace core

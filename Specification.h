@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <core/Formatter.h>
 #include <core/List.h>
-#include <core/Logger.h>
 #include <core/StringView.h>
 
 namespace sigil {
@@ -43,17 +43,18 @@ private:
 namespace core {
 
 template<>
-class Logger<sigil::Specification::TokenSpec::Type>
+class Formatter<sigil::Specification::TokenSpec::Type>
 {
 public:
-    static void log(sigil::Specification::TokenSpec::Type);
+    static void format(StringBuilder &, sigil::Specification::TokenSpec::Type);
 };
 
 template<>
-class Logger<sigil::Specification::TokenSpec>
+class Formatter<sigil::Specification::TokenSpec>
 {
 public:
-    static void log(const sigil::Specification::TokenSpec &);
+    static void format(
+        StringBuilder &, const sigil::Specification::TokenSpec &);
 };
 
 }  // namespace core

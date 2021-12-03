@@ -8,7 +8,7 @@
 
 #include <limits>
 
-#include <core/Logger.h>
+#include <core/Formatter.h>
 #include <core/Types.h>
 
 namespace sigil {
@@ -40,10 +40,10 @@ private:
 namespace core {
 
 template<>
-class Logger<sigil::CharSet>
+class Formatter<sigil::CharSet>
 {
 public:
-    static void log(const sigil::CharSet &);
+    static void format(StringBuilder &, const sigil::CharSet &);
 };
 
 }  // namespace core

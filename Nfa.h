@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <core/Formatter.h>
 #include <core/List.h>
-#include <core/Logger.h>
 #include <sigil/CharSet.h>
 
 namespace sigil::nfa {
@@ -42,7 +42,7 @@ public:
     }
     [[nodiscard]] constexpr const List<Arc *> &arcs() const { return m_arcs; }
 
-    static void log(const Automaton &);
+    static void format(core::StringBuilder &, const Automaton &);
 
 private:
     List<State *> m_states;
