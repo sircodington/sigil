@@ -64,43 +64,35 @@ void Logger<sigil::RegExp>::log(const sigil::RegExp &value)
     switch (value.type()) {
         case sigil::RegExp::Type::Atom: {
             const auto &exp = reinterpret_cast<const sigil::Atom &>(value);
-            Logging::log("Atom('");
-            Logging::log(exp.value(), "')");
+            Logging::log("Atom('", exp.value(), "')");
         } break;
 
         case sigil::RegExp::Type::Alternative: {
             const auto &exp =
                 reinterpret_cast<const sigil::Alternative &>(value);
-            Logging::log("Alternative(");
-            Logging::log(exp.left(), ", ");
-            Logging::log(exp.right(), ")");
+            Logging::log("Alternative(", exp.left(), ", ", exp.right(), ")");
         } break;
 
         case sigil::RegExp::Type::Concatenation: {
             const auto &exp =
                 reinterpret_cast<const sigil::Concatenation &>(value);
-            Logging::log("Concatenation(");
-            Logging::log(exp.left(), ", ");
-            Logging::log(exp.right(), ")");
+            Logging::log("Concatenation(", exp.left(), ", ", exp.right(), ")");
         } break;
 
         case sigil::RegExp::Type::Kleene: {
             const auto &exp = reinterpret_cast<const sigil::Kleene &>(value);
-            Logging::log("Kleene(");
-            Logging::log(exp.exp(), "')");
+            Logging::log("Kleene(", exp.exp(), "')");
         } break;
 
         case sigil::RegExp::Type::PositiveKleene: {
             const auto &exp =
                 reinterpret_cast<const sigil::PositiveKleene &>(value);
-            Logging::log("PositiveKleene(");
-            Logging::log(exp.exp(), "')");
+            Logging::log("PositiveKleene(", exp.exp(), "')");
         } break;
 
         case sigil::RegExp::Type::Optional: {
             const auto &exp = reinterpret_cast<const sigil::Optional &>(value);
-            Logging::log("Optional(");
-            Logging::log(exp.exp(), "')");
+            Logging::log("Optional(",exp.exp(), "')");
         } break;
 
         default:

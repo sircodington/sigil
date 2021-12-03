@@ -72,7 +72,7 @@ void Automaton::log(const nfa::Automaton &automaton)
             log_indentation(2);
             Logging::log("--- ");
 
-            Logger<const CharSet &>::log(arc->char_set);
+            core::Logging::log(arc->char_set);
             if (arc->epsilon) {
                 core::Logging::log(", epsilon");
             }

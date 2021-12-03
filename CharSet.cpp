@@ -21,7 +21,7 @@ CharSet::CharSet(u8 first, u8 last)
 
 namespace core {
 
-void Logger<const sigil::CharSet &>::log(const sigil::CharSet &char_set)
+void Logger<sigil::CharSet>::log(const sigil::CharSet &char_set)
 {
     bool first = true;
     for (auto i = sigil::CharSet::first; i <= sigil::CharSet::last; ++i) {

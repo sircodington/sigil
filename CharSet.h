@@ -40,7 +40,7 @@ private:
 namespace core {
 
 template<>
-class Logger<const sigil::CharSet &>
+class Logger<sigil::CharSet>
 {
 public:
     static void log(const sigil::CharSet &);
