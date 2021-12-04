@@ -84,18 +84,18 @@ void Formatter<sigil::RegExp>::format(
 
         case sigil::RegExp::Type::Kleene: {
             const auto &exp = reinterpret_cast<const sigil::Kleene &>(value);
-            Formatting::format_into(b, "Kleene(", exp.exp(), "')");
+            Formatting::format_into(b, "Kleene(", exp.exp(), ")");
         } break;
 
         case sigil::RegExp::Type::PositiveKleene: {
             const auto &exp =
                 reinterpret_cast<const sigil::PositiveKleene &>(value);
-            Formatting::format_into(b, "PositiveKleene(", exp.exp(), "')");
+            Formatting::format_into(b, "PositiveKleene(", exp.exp(), ")");
         } break;
 
         case sigil::RegExp::Type::Optional: {
             const auto &exp = reinterpret_cast<const sigil::Optional &>(value);
-            Formatting::format_into(b, "Optional(", exp.exp(), "')");
+            Formatting::format_into(b, "Optional(", exp.exp(), ")");
         } break;
 
         default: assert(false and "Unreachable");
