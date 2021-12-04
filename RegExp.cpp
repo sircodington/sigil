@@ -66,12 +66,8 @@ void Formatter<sigil::RegExp>::format(
     switch (value.type()) {
         case sigil::RegExp::Type::Atom: {
             const auto &exp = reinterpret_cast<const sigil::Atom &>(value);
-
-            StringView payload;
-            if (sigil::RegexParser::escape(payload, exp.value()))
-                Formatting::format_into(b, "Atom('", payload, "')");
-            else
-                Formatting::format_into(b, "Atom('", exp.value(), "')");
+            auto rendered_char = sigil::RegexParser::escape(exp.value());
+            Formatting::format_into(b, "Atom('", rendered_char, "')");
         } break;
 
         case sigil::RegExp::Type::Alternative: {

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <core/Either.h>
+#include <core/String.h>
 #include <core/StringView.h>
 
 namespace sigil {
@@ -20,8 +21,8 @@ public:
     void initialize(StringView input);
     Either<StringView, RegExp *> parse();
 
-    static bool unescape(char &result, char c);
-    static bool escape(StringView &result, char c);
+    static bool unescape(char &result, u8 &advance, const core::StringView &);
+    static String escape(char c);
 
 private:
     RegExp *parse_alternative();

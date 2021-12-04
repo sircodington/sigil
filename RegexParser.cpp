@@ -6,6 +6,9 @@
 
 #include "RegexParser.h"
 
+#include <algorithm>
+#include <cctype>
+
 #include <core/Formatting.h>
 #include <sigil/RegExp.h>
 
@@ -78,6 +81,21 @@ inline static bool can_be_primary_expression(char c)
         return true;
     return false;
 }
+inline static bool unhex(u8 &result, char c)
+{
+    if (not(between('a', c, 'f') or between('A', c, 'F') or
+            between('0', c, '9')))
+        return false;
+
+    c = char(tolower(c));
+    if (between('0', c, '9')) {
+        result = c - '0';
+    } else {
+        assert(between('a', c, 'f'));
+        result = 10 + c - 'a';
+    }
+    return true;
+}
 
 RegExp *RegexParser::parse_alternative()
 {
@@ -136,25 +154,64 @@ RegExp *RegexParser::parse_postfix()
     return result;
 }
 
-bool RegexParser::unescape(char &result, char c)
+bool RegexParser::unescape(
+    char &result, u8 &advance, const core::StringView &view)
 {
-    switch (c) {
-        case '\\': result = '\\'; return true;
-        case 't': result = '\t'; return true;
-        case 'r': result = '\r'; return true;
-        case 'n': result = '\n'; return true;
+    if (view.is_empty())
+        return false;
+
+    switch (view[0]) {
+        case '\\':
+            result = '\\';
+            advance = 1;
+            return true;
+        case 't':
+            result = '\t';
+            advance = 1;
+            return true;
+        case 'r':
+            result = '\r';
+            advance = 1;
+            return true;
+        case 'n':
+            result = '\n';
+            advance = 1;
+            return true;
+        case 'u': {
+            if (view.size() < 3)
+                return false;
+
+            u8 d0, d1;
+            if (not unhex(d0, view[1]))
+                return false;
+            if (not unhex(d1, view[2]))
+                return false;
+
+            advance = 3;
+            result = char(d0 * 16 + d1);
+            return true;
+        }
         default: return false;
     }
 }
 
-bool RegexParser::escape(StringView &result, char c)
+String RegexParser::escape(char c)
 {
     switch (c) {
-        case '\\': result = "\\\\"; return true;
-        case '\t': result = "\\t"; return true;
-        case '\r': result = "\\r"; return true;
-        case '\n': result = "\\n"; return true;
-        default: return false;
+        case '\\': return StringView("\\\\");
+        case '\t': return StringView("\\t");
+        case '\r': return StringView("\\r");
+        case '\n': return StringView("\\n");
+        default:
+            if (between(' ', c, '~')) {
+                return StringView(&c, 1);
+            } else {
+                char buffer[11] { 0 };
+                buffer[0] = 'u';
+                auto count = snprintf(buffer + 1, sizeof(buffer) - 1, "%X", c);
+                assert(count >= 0 and "snprintf failed");
+                return StringView(buffer, count + 1);
+            }
     }
 }
 
@@ -163,8 +220,16 @@ RegExp *RegexParser::parse_primary()
     if (can_be_atom(peek())) {
         auto c = advance();
         if (c == '\\') {
-            if (RegexParser::unescape(c, peek()))
-                advance();
+            const core::StringView peeked(
+                m_input.data() + m_offset,
+                std::min(m_input.size() - Size(m_offset), Size(3)));
+
+            u8 skip = 0;
+            if (not RegexParser::unescape(c, skip, peeked)) {
+                debug_log("Invalid escape sequence\n");
+                return nullptr;
+            }
+            for (u8 i = 0; i < skip; ++i) advance();
         }
         return create_reg_exp<Atom>(c);
     }
@@ -173,7 +238,7 @@ RegExp *RegexParser::parse_primary()
         advance();
         auto exp = parse_alternative();
         if (peek() != ')') {
-            debug_log("Expected ), but got `", peek(), "`\n");
+            debug_log("Expected `)`, but got `", peek(), "`\n");
             return nullptr;
         }
         advance();

@@ -45,19 +45,18 @@ static void regex_parser_tests()
     expect_eq(parse_regex("a"), "Atom('a')");
     expect_eq(parse_regex(" "), "Atom(' ')");
     expect_eq(parse_regex("\\n"), "Atom('\\n')");
-    // expect_eq(parse_regex("\\u005E"), "Atom('^')");
+    expect_eq(parse_regex("\\u5E"), "Atom('^')");
 
     expect_eq(parse_regex("a|b"), "Alternative(Atom('a'), Atom('b'))");
     expect_eq(parse_regex("a| "), "Alternative(Atom('a'), Atom(' '))");
     expect_eq(parse_regex("a|\\n"), "Alternative(Atom('a'), Atom('\\n'))");
-    // expect_eq(parse_regex("a|\\u005E"), "Alternative(Atom('a'), Atom('^'))");
+    expect_eq(parse_regex("a|\\u5E"), "Alternative(Atom('a'), Atom('^'))");
 
     expect_eq(parse_regex("aa"), "Concatenation(Atom('a'), Atom('a'))");
     expect_eq(parse_regex("a "), "Concatenation(Atom('a'), Atom(' '))");
     expect_eq(parse_regex("\\\\n"), "Concatenation(Atom('\\\\'), Atom('n'))");
     expect_eq(parse_regex("a\\n"), "Concatenation(Atom('a'), Atom('\\n'))");
-    // expect_eq(parse_regex("a\\u005E"), "Concatenation(Atom('a'),
-    // Atom('^'))");
+    expect_eq(parse_regex("a\\u5E"), "Concatenation(Atom('a'), Atom('^'))");
 
     expect_eq(parse_regex("a*"), "Kleene(Atom('a'))");
     expect_eq(parse_regex("a+"), "PositiveKleene(Atom('a'))");
