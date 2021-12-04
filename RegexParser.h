@@ -20,11 +20,14 @@ public:
     void initialize(StringView input);
     Either<StringView, RegExp *> parse();
 
+    static bool unescape(char &result, char c);
+    static bool escape(StringView &result, char c);
+
 private:
     RegExp *parse_alternative();
     RegExp *parse_concatenation();
     RegExp *parse_postfix();
-    RegExp *parse_atom();
+    RegExp *parse_primary();
 
     // @TODO: This might be a bit nicer when using Option<char>
     [[nodiscard]] bool can_peek() const;

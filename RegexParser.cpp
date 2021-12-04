@@ -54,13 +54,27 @@ inline static bool between(char min, char c, char max)
 {
     return min <= c and c <= max;
 }
-inline static bool is_atom(char c)
+inline static bool can_be_atom(char c)
 {
-    if (between('a', c, 'z'))
+    if (between('\0', c, '\u001F'))
+        return false;
+    if (between(' ', c, '\''))
         return true;
-    if (between('A', c, 'Z'))
+    if (between('(', c, '+'))
+        return false;
+    if (between('-', c, '{'))
         return true;
-    if (between('0', c, '9'))
+    if (c == '|')
+        return false;
+    if (between('}', c, '~'))
+        return true;
+    return false;
+}
+inline static bool can_be_primary_expression(char c)
+{
+    if (can_be_atom(c))
+        return true;
+    if (c == '(')
         return true;
     return false;
 }
@@ -89,7 +103,7 @@ RegExp *RegexParser::parse_concatenation()
     if (result == nullptr)
         return nullptr;
 
-    while (can_peek() and is_atom(peek())) {
+    while (can_peek() and can_be_primary_expression(peek())) {
         auto exp = parse_postfix();
         if (exp == nullptr)
             return nullptr;
@@ -102,30 +116,71 @@ RegExp *RegexParser::parse_concatenation()
 
 RegExp *RegexParser::parse_postfix()
 {
-    auto atom = parse_atom();
-    if (atom == nullptr)
+    auto result = parse_primary();
+    if (result == nullptr)
         return nullptr;
 
-    if (not can_peek())
-        return atom;
+    const auto is_postfix_operator = [](char c) {
+        return '*' == c or '+' == c or '?' == c;
+    };
 
-    switch (peek()) {
-        case '*': advance(); return create_reg_exp<Kleene>(atom);
-        case '+': advance(); return create_reg_exp<PositiveKleene>(atom);
-        case '?': advance(); return create_reg_exp<Optional>(atom);
-        default: return atom;
+    while (can_peek() and is_postfix_operator(peek())) {
+        switch (advance()) {
+            case '*': result = create_reg_exp<Kleene>(result); break;
+            case '+': result = create_reg_exp<PositiveKleene>(result); break;
+            case '?': result = create_reg_exp<Optional>(result); break;
+            default: assert(false and "Unreachable");
+        }
+    }
+
+    return result;
+}
+
+bool RegexParser::unescape(char &result, char c)
+{
+    switch (c) {
+        case '\\': result = '\\'; return true;
+        case 't': result = '\t'; return true;
+        case 'r': result = '\r'; return true;
+        case 'n': result = '\n'; return true;
+        default: return false;
     }
 }
 
-RegExp *RegexParser::parse_atom()
+bool RegexParser::escape(StringView &result, char c)
 {
-    const auto c = peek();
-    if (is_atom(c)) {
-        advance();
+    switch (c) {
+        case '\\': result = "\\\\"; return true;
+        case '\t': result = "\\t"; return true;
+        case '\r': result = "\\r"; return true;
+        case '\n': result = "\\n"; return true;
+        default: return false;
+    }
+}
+
+RegExp *RegexParser::parse_primary()
+{
+    if (can_be_atom(peek())) {
+        auto c = advance();
+        if (c == '\\') {
+            if (RegexParser::unescape(c, peek()))
+                advance();
+        }
         return create_reg_exp<Atom>(c);
     }
 
-    debug_log("Expected atom, but got `", c, "`\n");
+    if (peek() == '(') {
+        advance();
+        auto exp = parse_alternative();
+        if (peek() != ')') {
+            debug_log("Expected ), but got `", peek(), "`\n");
+            return nullptr;
+        }
+        advance();
+        return exp;
+    }
+
+    debug_log("Expected atom, but got `", peek(), "`\n");
     return nullptr;
 }
 
