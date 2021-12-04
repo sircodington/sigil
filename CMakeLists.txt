@@ -7,6 +7,7 @@ set(${PROJECT_NAME}_HEADERS
     RegExp.h
     RegexParser.h
     Specification.h
+    test.h
 )
 
 set(${PROJECT_NAME}_SOURCES
@@ -16,6 +17,7 @@ set(${PROJECT_NAME}_SOURCES
     RegExp.cpp
     RegexParser.cpp
     Specification.cpp
+    test.cpp
 )
 
 add_library(${PROJECT_NAME}
