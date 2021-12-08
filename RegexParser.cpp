@@ -31,6 +31,7 @@ void sigil::RegexParser::initialize(StringView input)
 //          ;
 //
 // atom ::= CHAR
+//        | CHAR-CLASS
 //        ;
 //
 
