@@ -30,7 +30,8 @@
 
 String parse_regex(const StringView &regex_pattern)
 {
-    sigil::RegexParser parser;
+    core::Arena arena;
+    sigil::RegexParser parser(arena);
     parser.initialize(regex_pattern);
     auto either_exp = parser.parse();
     if (not either_exp.isRight())

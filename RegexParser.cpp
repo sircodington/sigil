@@ -14,6 +14,11 @@
 
 namespace sigil {
 
+RegexParser::RegexParser(core::Arena &arena)
+    : m_arena(arena)
+{
+}
+
 void sigil::RegexParser::initialize(StringView input)
 {
     m_input = input;
@@ -34,12 +39,6 @@ void sigil::RegexParser::initialize(StringView input)
 //        | CHAR-CLASS
 //        ;
 //
-
-template<typename T, typename... Args>
-inline static RegExp *create_reg_exp(Args... args)
-{
-    return new T(std::forward<Args>(args)...);
-}
 
 Either<StringView, RegExp *> sigil::RegexParser::parse()
 {
