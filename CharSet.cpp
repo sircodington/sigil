@@ -7,6 +7,7 @@
 #include "CharSet.h"
 
 #include <core/Formatting.h>
+#include <sigil/RegexParser.h>
 
 namespace sigil {
 
@@ -32,11 +33,7 @@ void Formatter<sigil::CharSet>::format(
                 Formatting::format_into(b, ",");
             first = false;
 
-            if (' ' <= c and c <= '~') {
-                Formatting::format_into(b, "'", c, "'");
-            } else {
-                Formatting::format_into(b, i);
-            }
+            Formatting::format_into(b, "'", sigil::RegexParser::escape(c), "'");
         }
     }
 }

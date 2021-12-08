@@ -9,7 +9,6 @@
 #include <cassert>
 
 #include <core/Formatting.h>
-#include <sigil/RegexParser.h>
 
 namespace sigil {
 
@@ -18,9 +17,9 @@ RegExp::RegExp(RegExp::Type type)
 {
 }
 
-Atom::Atom(char value)
+Atom::Atom(CharSet char_set)
     : RegExp(Type::Atom)
-    , m_value(value)
+    , m_char_set(std::move(char_set))
 {
 }
 
@@ -66,8 +65,7 @@ void Formatter<sigil::RegExp>::format(
     switch (value.type()) {
         case sigil::RegExp::Type::Atom: {
             const auto &exp = reinterpret_cast<const sigil::Atom &>(value);
-            auto rendered_char = sigil::RegexParser::escape(exp.value());
-            Formatting::format_into(b, "Atom('", rendered_char, "')");
+            Formatting::format_into(b, "Atom(", exp.char_set(), ")");
         } break;
 
         case sigil::RegExp::Type::Alternative: {

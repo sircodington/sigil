@@ -8,6 +8,7 @@
 
 #include <core/Formatter.h>
 #include <core/Types.h>
+#include <sigil/CharSet.h>
 
 namespace sigil {
 
@@ -37,12 +38,12 @@ private:
 class Atom final : public RegExp
 {
 public:
-    explicit Atom(char);
+    explicit Atom(CharSet);
 
-    [[nodiscard]] char value() const { return m_value; }
+    [[nodiscard]] const CharSet &char_set() const { return m_char_set; }
 
 private:
-    char m_value;
+    CharSet m_char_set;
 };
 
 class Alternative final : public RegExp

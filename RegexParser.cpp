@@ -231,7 +231,7 @@ RegExp *RegexParser::parse_primary()
             }
             for (u8 i = 0; i < skip; ++i) advance();
         }
-        return create_reg_exp<Atom>(c);
+        return create_reg_exp<Atom>(CharSet(c));
     }
 
     if (peek() == '(') {
