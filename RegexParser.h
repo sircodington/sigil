@@ -28,6 +28,7 @@ private:
     RegExp *parse_alternative();
     RegExp *parse_concatenation();
     RegExp *parse_postfix();
+    uint64_t parse_atom();
     RegExp *parse_primary();
 
     // @TODO: This might be a bit nicer when using Option<char>

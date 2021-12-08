@@ -75,6 +75,22 @@ static void regex_parser_tests()
     expect_eq(
         parse_regex("a(b|c)"),
         "Concatenation(Atom('a'), Alternative(Atom('b'), Atom('c')))");
+
+    // @NOTE: The parser accepts the empty character class, it shall be handled
+    // elsewhere
+    expect_eq(parse_regex("[]"), "Atom()");
+
+    expect_eq(parse_regex("[a]"), "Atom('a')");
+    expect_eq(parse_regex("[ab]"), "Atom('a','b')");
+    expect_eq(parse_regex("[a-c]"), "Atom('a','b','c')");
+    expect_eq(
+        parse_regex("[a-zA-Z]"),
+        "Atom('A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P',"
+        "'Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g',"
+        "'h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x',"
+        "'y','z')");
+
+    expect_eq(parse_regex("[-a]"), "Atom('-','a')");
 }
 
 void sigil_tests() { regex_parser_tests(); }

@@ -65,7 +65,15 @@ inline static bool can_be_atom(char c)
         return true;
     if (between('(', c, '+'))
         return false;
-    if (between('-', c, '{'))
+    if (between('-', c, 'Z'))
+        return true;
+    if (c == '[')
+        return false;
+    if (c == '\\')
+        return true;
+    if (c == ']')
+        return false;
+    if (between('^', c, '{'))
         return true;
     if (c == '|')
         return false;
@@ -78,6 +86,8 @@ inline static bool can_be_primary_expression(char c)
     if (can_be_atom(c))
         return true;
     if (c == '(')
+        return true;
+    if (c == '[')
         return true;
     return false;
 }
@@ -215,23 +225,62 @@ String RegexParser::escape(char c)
     }
 }
 
+constexpr static auto ErrorAtom = std::numeric_limits<uint64_t>::max();
+
+uint64_t RegexParser::parse_atom()
+{
+    assert(can_be_atom(peek()));
+    auto c = advance();
+    if (c == '\\') {
+        const core::StringView peeked(
+            m_input.data() + m_offset,
+            std::min(m_input.size() - Size(m_offset), Size(3)));
+
+        u8 skip = 0;
+        if (not RegexParser::unescape(c, skip, peeked)) {
+            debug_log("Invalid escape sequence\n");
+            return ErrorAtom;
+        }
+        for (u8 i = 0; i < skip; ++i) advance();
+    }
+    return c;
+}
+
 RegExp *RegexParser::parse_primary()
 {
     if (can_be_atom(peek())) {
-        auto c = advance();
-        if (c == '\\') {
-            const core::StringView peeked(
-                m_input.data() + m_offset,
-                std::min(m_input.size() - Size(m_offset), Size(3)));
+        auto atom = parse_atom();
+        if (ErrorAtom == atom)
+            return nullptr;
 
-            u8 skip = 0;
-            if (not RegexParser::unescape(c, skip, peeked)) {
-                debug_log("Invalid escape sequence\n");
+        CharSet singleton_char_set { u8(atom) };
+        return create_reg_exp<Atom>(std::move(singleton_char_set));
+    }
+
+    if (peek() == '[') {
+        advance();
+
+        CharSet char_set;
+        while (peek() != ']') {
+            auto curr = parse_atom();
+            if (ErrorAtom == curr)
                 return nullptr;
+
+            if (peek() == '-') {
+                advance();
+
+                auto next = parse_atom();
+                if (ErrorAtom == next)
+                    return nullptr;
+
+                char_set.set(char(curr), char(next), true);
+            } else {
+                char_set.set(char(curr), true);
             }
-            for (u8 i = 0; i < skip; ++i) advance();
         }
-        return create_reg_exp<Atom>(CharSet(c));
+        advance();
+
+        return create_reg_exp<Atom>(std::move(char_set));
     }
 
     if (peek() == '(') {
@@ -245,7 +294,7 @@ RegExp *RegexParser::parse_primary()
         return exp;
     }
 
-    debug_log("Expected atom, but got `", peek(), "`\n");
+    debug_log("Expected primary expression, but got `", peek(), "`\n");
     return nullptr;
 }
 

@@ -30,6 +30,9 @@ public:
 
     [[nodiscard]] bool contains(u8 c) const { return m_included[c]; }
 
+    void set(u8, bool);
+    void set(u8 first, u8 last, bool);
+
 private:
     constexpr static auto Size = std::numeric_limits<u8>::max() + 1;
     bool m_included[Size] {};

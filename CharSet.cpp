@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
+#include <algorithm>
+
 #include "CharSet.h"
 
 #include <core/Formatting.h>
@@ -14,8 +16,17 @@ namespace sigil {
 CharSet::CharSet(u8 first, u8 last)
 {
     for (auto i = sigil::CharSet::first; i <= sigil::CharSet::last; ++i) {
-        m_included[i] = first <= u8(i) and u8(i) <= last;
+        set(i, first <= u8(i) and u8(i) <= last);
     }
+}
+
+void CharSet::set(u8 i, bool value) { m_included[i] = value; }
+
+void CharSet::set(u8 first, u8 last, bool value)
+{
+    const auto start = std::max<u8>(sigil::CharSet::first, first);
+    const auto end = std::min<u8>(sigil::CharSet::last, last);
+    for (auto i = start; i <= end; ++i) { set(i, value); }
 }
 
 }  // namespace sigil
