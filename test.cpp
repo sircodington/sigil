@@ -91,6 +91,9 @@ static void regex_parser_tests()
         "'y','z')");
 
     expect_eq(parse_regex("[-a]"), "Atom('-','a')");
+    expect_eq(
+        parse_regex("[^\\u00-/:-\\uFF]"),
+        "Atom('0','1','2','3','4','5','6','7','8','9')");
 }
 
 void sigil_tests() { regex_parser_tests(); }

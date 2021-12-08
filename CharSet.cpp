@@ -24,9 +24,15 @@ void CharSet::set(u8 i, bool value) { m_included[i] = value; }
 
 void CharSet::set(u8 first, u8 last, bool value)
 {
-    const auto start = std::max<u8>(sigil::CharSet::first, first);
-    const auto end = std::min<u8>(sigil::CharSet::last, last);
-    for (auto i = start; i <= end; ++i) { set(i, value); }
+    const auto start = std::max<u16>(sigil::CharSet::first, first);
+    const auto end = std::min<u16>(sigil::CharSet::last, last);
+    for (auto i = start; i <= end; ++i) set(i, value);
+}
+
+void CharSet::negate()
+{
+    for (auto i = sigil::CharSet::first; i <= sigil::CharSet::last; ++i)
+        set(i, not contains(i));
 }
 
 }  // namespace sigil

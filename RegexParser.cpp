@@ -165,7 +165,7 @@ RegExp *RegexParser::parse_postfix()
 }
 
 bool RegexParser::unescape(
-    char &result, u8 &advance, const core::StringView &view)
+    u8 &result, u8 &advance, const core::StringView &view)
 {
     if (view.is_empty())
         return false;
@@ -198,7 +198,7 @@ bool RegexParser::unescape(
                 return false;
 
             advance = 3;
-            result = char(d0 * 16 + d1);
+            result = u8(d0 * 16 + d1);
             return true;
         }
         default: return false;
@@ -230,7 +230,7 @@ constexpr static auto ErrorAtom = std::numeric_limits<uint64_t>::max();
 uint64_t RegexParser::parse_atom()
 {
     assert(can_be_atom(peek()));
-    auto c = advance();
+    u8 c = advance();
     if (c == '\\') {
         const core::StringView peeked(
             m_input.data() + m_offset,
@@ -260,6 +260,10 @@ RegExp *RegexParser::parse_primary()
     if (peek() == '[') {
         advance();
 
+        const auto negate = peek() == '^';
+        if (negate)
+            advance();
+
         CharSet char_set;
         while (peek() != ']') {
             auto curr = parse_atom();
@@ -273,12 +277,15 @@ RegExp *RegexParser::parse_primary()
                 if (ErrorAtom == next)
                     return nullptr;
 
-                char_set.set(char(curr), char(next), true);
+                char_set.set(u8(curr), u8(next), true);
             } else {
-                char_set.set(char(curr), true);
+                char_set.set(u8(curr), true);
             }
         }
         advance();
+
+        if (negate)
+            char_set.negate();
 
         return create_reg_exp<Atom>(std::move(char_set));
     }

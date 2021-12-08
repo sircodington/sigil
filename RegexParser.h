@@ -21,7 +21,7 @@ public:
     void initialize(StringView input);
     Either<StringView, RegExp *> parse();
 
-    static bool unescape(char &result, u8 &advance, const core::StringView &);
+    static bool unescape(u8 &result, u8 &advance, const core::StringView &);
     static String escape(char c);
 
 private:
