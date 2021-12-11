@@ -10,33 +10,27 @@
 
 namespace sigil::nfa {
 
-template<typename T>
-inline static void delete_all(List<T *> &list)
+Automaton::Automaton(core::Arena &arena)
+    : m_arena(arena)
 {
-    for (auto ele : list) {
-        if (ele == nullptr)
-            continue;
-        delete ele;
-    }
-    list.clear();
 }
 
 Automaton::~Automaton()
 {
-    delete_all(m_states);
-    delete_all(m_arcs);
+    m_states.clear();
+    m_arcs.clear();
 }
 
 State *Automaton::create_state()
 {
-    auto state = new State { m_states.size() };
+    auto state = m_arena.construct<State>(m_states.size());
     m_states.add(state);
     return state;
 }
 
 Arc *Automaton::create_arc(const State *origin, const State *target)
 {
-    auto arc = new Arc { origin, target };
+    auto arc = m_arena.construct<Arc>(origin, target);
     m_arcs.add(arc);
     return arc;
 }
@@ -63,7 +57,6 @@ void Automaton::format(core::StringBuilder &b, const nfa::Automaton &automaton)
     for (const auto state : automaton.states()) {
         format_indentation(b, 1);
         log_state(b, *state);
-    Formatting:
         Formatting::format_into(b, "\n");
 
         for (const auto arc : automaton.arcs()) {

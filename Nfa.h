@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <core/Arena.h>
 #include <core/Formatter.h>
 #include <core/List.h>
 #include <sigil/CharSet.h>
@@ -14,6 +15,10 @@ namespace sigil::nfa {
 
 struct State
 {
+    explicit State(u64 id)
+        : id(id)
+    {
+    }
     const u64 id { 0 };
     bool start { false };
     bool accepting { false };
@@ -21,6 +26,11 @@ struct State
 
 struct Arc
 {
+    Arc(const State *const origin, const State *const target)
+        : origin(origin)
+        , target(target)
+    {
+    }
     const State *const origin { nullptr };
     const State *const target { nullptr };
     bool epsilon { false };
@@ -30,7 +40,7 @@ struct Arc
 class Automaton
 {
 public:
-    Automaton() = default;
+    explicit Automaton(core::Arena &arena);
     ~Automaton();
 
     State *create_state();
@@ -45,6 +55,7 @@ public:
     static void format(core::StringBuilder &, const Automaton &);
 
 private:
+    core::Arena &m_arena;
     List<State *> m_states;
     List<Arc *> m_arcs;
 };

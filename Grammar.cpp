@@ -6,6 +6,7 @@
 
 #include "Grammar.h"
 
+#include <core/Arena.h>
 #include <core/Formatting.h>
 #include <sigil/Nfa.h>
 
@@ -47,10 +48,11 @@ Either<StringView, Grammar> sigil::Grammar::compile(
     const sigil::Specification &specification)
 {
     using Result = Either<StringView, Grammar>;
+    core::Arena arena;
 
     List<nfa::Automaton> nfas(specification.tokens().size());
     for (Index i = 0; i < specification.tokens().size(); ++i) {
-        nfas.add(nfa::Automaton());
+        nfas.add(nfa::Automaton(arena));
         if (not create_automaton(nfas[i], specification.tokens()[i])) {
             return Result::left("failed to create nfa for token");
         }
