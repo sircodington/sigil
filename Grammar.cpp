@@ -115,13 +115,14 @@ static INfa create_regex_automaton(
     return { start, end };
 }
 
-static bool create_automaton(
-    core::Arena &arena,
-    nfa::Automaton &automaton,
-    const Specification::TokenSpec &token)
+static Either<StringView, nfa::Automaton> create_automaton(
+    core::Arena &arena, const Specification::TokenSpec &token)
 {
+    using Result = Either<StringView, nfa::Automaton>;
+
     switch (token.type) {
         case Specification::TokenSpec::Type::Literal: {
+            sigil::nfa::Automaton automaton(arena);
             auto curr = automaton.create_state();
             curr->start = true;
 
@@ -136,27 +137,25 @@ static bool create_automaton(
             }
 
             curr->accepting = true;
-            return true;
+            return Result::right(std::move(automaton));
         }
 
         case Specification::TokenSpec::Type::Regex: {
+            sigil::nfa::Automaton automaton(arena);
             sigil::RegexParser parser(arena);
             parser.initialize(token.pattern);
 
             auto either_regex = parser.parse();
-            // @TODO: Error propagation
-            if (not either_regex.isRight()) {
-                debug_log("ERROR: ", either_regex.left(), "\n");
-                return false;
-            }
+            if (not either_regex.isRight())
+                return Result::left(std::move(either_regex.release_left()));
 
             auto regex = either_regex.right();
             create_regex_automaton(automaton, regex);
-            return true;
+            return Result::right(std::move(automaton));
         }
 
         case Specification::TokenSpec::Type::Invalid:
-        default: assert(false and "Unreachable"); return false;
+        default: assert(false and "Unreachable"); return Result::left({});
     }
 }
 
@@ -168,16 +167,19 @@ Either<StringView, Grammar> sigil::Grammar::compile(
 
     List<nfa::Automaton> nfas(specification.tokens().size());
     for (Index i = 0; i < specification.tokens().size(); ++i) {
-        nfas.add(nfa::Automaton(arena));
-        if (not create_automaton(arena, nfas[i], specification.tokens()[i])) {
-            return Result::left("failed to create nfa for token");
-        }
+        auto either_automaton =
+            create_automaton(arena, specification.tokens()[i]);
+        if (not either_automaton.isRight())
+            return Result::left(std::move(either_automaton.release_left()));
+
+        auto automaton = std::move(either_automaton.release_right());
 
         // @TODO: Automaton can't be copied! Is this our Lists fault?
-
         core::StringBuilder builder;
-        nfa::Automaton::format(builder, nfas[i]);
+        nfa::Automaton::format(builder, automaton);
         debug_log(builder.toString(), "\n");
+
+        nfas.add(std::move(automaton));
     }
 
     Grammar grammar;
