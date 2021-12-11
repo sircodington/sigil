@@ -68,7 +68,10 @@ void Automaton::format(core::StringBuilder &b, const nfa::Automaton &automaton)
 
             core::Formatting::format_into(b, arc->char_set);
             if (arc->epsilon) {
-                core::Formatting::format_into(b, ", epsilon");
+                if (arc->char_set.non_empty())
+                    core::Formatting::format_into(b, ", ");
+
+                core::Formatting::format_into(b, "epsilon");
             }
 
             Formatting::format_into(b, " ---> ");
