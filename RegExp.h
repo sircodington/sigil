@@ -51,8 +51,8 @@ class Alternative final : public RegExp
 public:
     Alternative(RegExp *left, RegExp *right);
 
-    [[nodiscard]] const RegExp &left() const { return *m_left; }
-    [[nodiscard]] const RegExp &right() const { return *m_right; }
+    [[nodiscard]] const RegExp *left() const { return m_left; }
+    [[nodiscard]] const RegExp *right() const { return m_right; }
 
 private:
     RegExp *m_left { nullptr };
@@ -64,8 +64,8 @@ class Concatenation final : public RegExp
 public:
     Concatenation(RegExp *left, RegExp *right);
 
-    [[nodiscard]] const RegExp &left() const { return *m_left; }
-    [[nodiscard]] const RegExp &right() const { return *m_right; }
+    [[nodiscard]] const RegExp *left() const { return m_left; }
+    [[nodiscard]] const RegExp *right() const { return m_right; }
 
 private:
     RegExp *m_left { nullptr };
@@ -77,7 +77,7 @@ class Kleene final : public RegExp
 public:
     explicit Kleene(RegExp *exp);
 
-    [[nodiscard]] const RegExp &exp() const { return *m_exp; }
+    [[nodiscard]] const RegExp *exp() const { return m_exp; }
 
 private:
     RegExp *m_exp { nullptr };
@@ -88,7 +88,7 @@ class PositiveKleene final : public RegExp
 public:
     explicit PositiveKleene(RegExp *exp);
 
-    [[nodiscard]] const RegExp &exp() const { return *m_exp; }
+    [[nodiscard]] const RegExp *exp() const { return m_exp; }
 
 private:
     RegExp *m_exp { nullptr };
@@ -99,7 +99,7 @@ class Optional final : public RegExp
 public:
     explicit Optional(RegExp *exp);
 
-    [[nodiscard]] const RegExp &exp() const { return *m_exp; }
+    [[nodiscard]] const RegExp *exp() const { return m_exp; }
 
 private:
     RegExp *m_exp { nullptr };
