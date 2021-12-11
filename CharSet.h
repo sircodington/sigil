@@ -29,6 +29,8 @@ public:
     constexpr static u16 last = std::numeric_limits<u8>::max();
 
     [[nodiscard]] bool contains(u8 c) const { return m_included[c]; }
+    bool is_empty() const;
+    bool non_empty() const { return not is_empty(); }
 
     void set(u8, bool);
     void set(u8 first, u8 last, bool);

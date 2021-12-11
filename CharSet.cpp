@@ -20,6 +20,15 @@ CharSet::CharSet(u8 first, u8 last)
     }
 }
 
+bool CharSet::is_empty() const
+{
+    for (auto i = sigil::CharSet::first; i <= sigil::CharSet::last; ++i) {
+        if (contains(i))
+            return false;
+    }
+    return true;
+}
+
 void CharSet::set(u8 i, bool value) { m_included[i] = value; }
 
 void CharSet::set(u8 first, u8 last, bool value)
