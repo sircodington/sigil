@@ -28,9 +28,18 @@ State *Automaton::create_state()
     return state;
 }
 
-Arc *Automaton::create_arc(State *origin, State *target)
+Arc *Automaton::create_epsilon_arc(State *origin, State *target)
 {
-    auto arc = m_arena.construct<Arc>(origin, target);
+    auto arc = m_arena.construct<Arc>(Arc::Type::Epsilon, origin, target);
+    m_arcs.add(arc);
+    return arc;
+}
+
+Arc *Automaton::create_character_arc(
+    State *origin, State *target, CharSet char_set)
+{
+    auto arc = m_arena.construct<Arc>(Arc::Type::CharSet, origin, target);
+    arc->char_set = std::move(char_set);
     m_arcs.add(arc);
     return arc;
 }
@@ -67,7 +76,7 @@ void Automaton::format(core::StringBuilder &b, const nfa::Automaton &automaton)
             Formatting::format_into(b, "--- ");
 
             core::Formatting::format_into(b, arc->char_set);
-            if (arc->epsilon) {
+            if (arc->is_epsilon()) {
                 if (arc->char_set.non_empty())
                     core::Formatting::format_into(b, ", ");
 

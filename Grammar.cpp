@@ -40,12 +40,6 @@ static void drop_config(INfa &nfa)
     nfa.end->accepting = false;
 }
 
-static void epsilon_arc(nfa::Automaton &automaton, nfa::State *a, nfa::State *b)
-{
-    auto arc = automaton.create_arc(a, b);
-    arc->epsilon = true;
-}
-
 static INfa create_regex_nfa(nfa::Automaton &automaton, const RegExp *regexp)
 {
     auto start = automaton.create_state();
@@ -58,7 +52,7 @@ static INfa create_regex_nfa(nfa::Automaton &automaton, const RegExp *regexp)
 
         case RegExp::Type::Atom: {
             const auto exp = reinterpret_cast<const Atom *>(regexp);
-            automaton.create_arc(start, end)->char_set = exp->char_set();
+            automaton.create_character_arc(start, end, exp->char_set());
         } break;
 
         case RegExp::Type::Alternative: {
@@ -70,10 +64,10 @@ static INfa create_regex_nfa(nfa::Automaton &automaton, const RegExp *regexp)
             auto right = create_regex_nfa(automaton, exp->right());
             drop_config(right);
 
-            epsilon_arc(automaton, start, left.start);
-            epsilon_arc(automaton, start, right.start);
-            epsilon_arc(automaton, left.end, end);
-            epsilon_arc(automaton, right.end, end);
+            automaton.create_epsilon_arc(start, left.start);
+            automaton.create_epsilon_arc(start, right.start);
+            automaton.create_epsilon_arc(left.end, end);
+            automaton.create_epsilon_arc(right.end, end);
         } break;
 
         case RegExp::Type::Concatenation: {
@@ -85,9 +79,9 @@ static INfa create_regex_nfa(nfa::Automaton &automaton, const RegExp *regexp)
             auto right = create_regex_nfa(automaton, exp->right());
             drop_config(right);
 
-            epsilon_arc(automaton, start, left.start);
-            epsilon_arc(automaton, left.end, right.start);
-            epsilon_arc(automaton, right.end, end);
+            automaton.create_epsilon_arc(start, left.start);
+            automaton.create_epsilon_arc(left.end, right.start);
+            automaton.create_epsilon_arc(right.end, end);
         } break;
 
         case RegExp::Type::Kleene: {
@@ -96,10 +90,10 @@ static INfa create_regex_nfa(nfa::Automaton &automaton, const RegExp *regexp)
             auto wrapped = create_regex_nfa(automaton, exp->exp());
             drop_config(wrapped);
 
-            epsilon_arc(automaton, start, wrapped.start);
-            epsilon_arc(automaton, start, end);
-            epsilon_arc(automaton, wrapped.end, end);
-            epsilon_arc(automaton, end, start);
+            automaton.create_epsilon_arc(start, wrapped.start);
+            automaton.create_epsilon_arc(start, end);
+            automaton.create_epsilon_arc(wrapped.end, end);
+            automaton.create_epsilon_arc(end, start);
         } break;
 
         case RegExp::Type::PositiveKleene: {
@@ -108,9 +102,9 @@ static INfa create_regex_nfa(nfa::Automaton &automaton, const RegExp *regexp)
             auto wrapped = create_regex_nfa(automaton, exp->exp());
             drop_config(wrapped);
 
-            epsilon_arc(automaton, start, wrapped.start);
-            epsilon_arc(automaton, wrapped.end, end);
-            epsilon_arc(automaton, end, start);
+            automaton.create_epsilon_arc(start, wrapped.start);
+            automaton.create_epsilon_arc(wrapped.end, end);
+            automaton.create_epsilon_arc(end, start);
         } break;
 
         case RegExp::Type::Optional: {
@@ -119,9 +113,9 @@ static INfa create_regex_nfa(nfa::Automaton &automaton, const RegExp *regexp)
             auto wrapped = create_regex_nfa(automaton, exp->exp());
             drop_config(wrapped);
 
-            epsilon_arc(automaton, start, wrapped.start);
-            epsilon_arc(automaton, wrapped.end, end);
-            epsilon_arc(automaton, start, end);
+            automaton.create_epsilon_arc(start, wrapped.start);
+            automaton.create_epsilon_arc(wrapped.end, end);
+            automaton.create_epsilon_arc(start, end);
         } break;
     }
 
@@ -144,8 +138,7 @@ static Either<StringView, nfa::Automaton> create_nfa(
                 const auto c = token.pattern[i];
 
                 auto next = automaton.create_state();
-                auto arc = automaton.create_arc(curr, next);
-                arc->char_set = CharSet(c);
+                automaton.create_character_arc(curr, next, CharSet(c));
                 curr = next;
             }
 
@@ -213,9 +206,7 @@ static Set<NfaState> reachable_by_epsilon(const Set<NfaState> &states)
             auto &nfa = *nfa_state.nfa;
 
             foreach_reachable(nfa, nfa_state.state, [&](nfa::Arc &arc) {
-                assert(arc.char_set.non_empty() ^ arc.epsilon);
-
-                if (not arc.epsilon)
+                if (arc.is_character())
                     return;
 
                 NfaState nfa_state { &nfa, arc.target };
@@ -243,9 +234,7 @@ static Set<NfaState> reachable_by_char(const Set<NfaState> &states, u8 c)
         auto &nfa = *state.nfa;
 
         foreach_reachable(nfa, state.state, [&](nfa::Arc &arc) {
-            assert(arc.char_set.non_empty() ^ arc.epsilon);
-
-            if (arc.epsilon)
+            if (arc.is_epsilon())
                 return;
             if (not arc.char_set.contains(c))
                 return;
@@ -314,18 +303,20 @@ static nfa::Automaton create_dfa(
                 }
             }
             if (arc_between == nullptr) {
-                arc_between =
-                    dfa.create_arc(dfa_state->dfa_state, new_state->dfa_state);
+                arc_between = dfa.create_character_arc(
+                    dfa_state->dfa_state, new_state->dfa_state, CharSet(c));
             }
             arc_between->char_set.set(c, true);
         }
 
         // @TODO: Different data structure for dfa?
-        // @TODO: Flag explicit error state as error state (iff `reachable` is empty)
+        // @TODO: Flag explicit error state as error state (iff `reachable` is
+        // empty)
         // @TODO: Label accepting states (Remember which token they represent)
         // @TODO: Optimize allocations e.g. using Arena?
         // @TODO: Optimize Set and Map
         // @TODO: Unit-testing nfa?, dfa
+        // @TODO: Visualize automatons (maybe using graphvis)
         bool contains_accepting = false;
         for (const auto &nfa_state : dfa_state->nfa_states) {
             if (nfa_state.state->accepting) {

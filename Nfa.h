@@ -26,14 +26,24 @@ struct State
 
 struct Arc
 {
-    Arc(State *origin, State *target)
-        : origin(origin)
+    enum class Type : u8
+    {
+        Epsilon,
+        CharSet,
+    };
+    Arc(Type type, State *origin, State *target)
+        : type(type)
+        , origin(origin)
         , target(target)
     {
     }
+
+    [[nodiscard]] bool is_epsilon() const { return Type::Epsilon == type; }
+    [[nodiscard]] bool is_character() const { return Type::CharSet == type; }
+
+    Type type;
     State *origin { nullptr };
     State *target { nullptr };
-    bool epsilon { false };
     CharSet char_set;
 };
 
@@ -44,7 +54,9 @@ public:
     ~Automaton();
 
     State *create_state();
-    Arc *create_arc(State *origin, State *target);
+    Arc *create_epsilon_arc(State *origin, State *target);
+    Arc *create_character_arc(
+        State *origin, State *target, CharSet char_set = CharSet());
 
     [[nodiscard]] constexpr const List<State *> &states() const
     {
