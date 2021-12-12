@@ -28,7 +28,7 @@ State *Automaton::create_state()
     return state;
 }
 
-Arc *Automaton::create_arc(const State *origin, const State *target)
+Arc *Automaton::create_arc(State *origin, State *target)
 {
     auto arc = m_arena.construct<Arc>(origin, target);
     m_arcs.add(arc);

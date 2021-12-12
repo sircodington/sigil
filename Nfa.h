@@ -26,13 +26,13 @@ struct State
 
 struct Arc
 {
-    Arc(const State *const origin, const State *const target)
+    Arc(State *origin, State *target)
         : origin(origin)
         , target(target)
     {
     }
-    const State *const origin { nullptr };
-    const State *const target { nullptr };
+    State *origin { nullptr };
+    State *target { nullptr };
     bool epsilon { false };
     CharSet char_set;
 };
@@ -44,7 +44,7 @@ public:
     ~Automaton();
 
     State *create_state();
-    Arc *create_arc(const State *origin, const State *target);
+    Arc *create_arc(State *origin, State *target);
 
     [[nodiscard]] constexpr const List<State *> &states() const
     {
