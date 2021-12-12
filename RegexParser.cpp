@@ -205,7 +205,7 @@ bool RegexParser::unescape(
     }
 }
 
-String RegexParser::escape(char c)
+String RegexParser::escape(u8 c)
 {
     switch (c) {
         case '\\': return StringView("\\\\");
@@ -214,13 +214,15 @@ String RegexParser::escape(char c)
         case '\n': return StringView("\\n");
         default:
             if (between(' ', c, '~')) {
-                return StringView(&c, 1);
+                return StringView(reinterpret_cast<char *>(&c), 1);
             } else {
-                char buffer[11] { 0 };
-                buffer[0] = 'u';
-                auto count = snprintf(buffer + 1, sizeof(buffer) - 1, "%X", c);
+                char buffer[12] { 0 };
+                buffer[0] = '\\';
+                buffer[1] = 'u';
+                auto count =
+                    snprintf(buffer + 2, sizeof(buffer) - 2, "%X", (c & 0xFF));
                 assert(count >= 0 and "snprintf failed");
-                return StringView(buffer, count + 1);
+                return StringView(buffer, count + 2);
             }
     }
 }

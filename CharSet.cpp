@@ -51,17 +51,47 @@ namespace core {
 void Formatter<sigil::CharSet>::format(
     StringBuilder &b, const sigil::CharSet &char_set)
 {
-    bool first = true;
-    for (auto i = sigil::CharSet::first; i <= sigil::CharSet::last; ++i) {
-        const auto c = char(i);
-        if (char_set.contains(c)) {
-            if (not first)
-                Formatting::format_into(b, ",");
-            first = false;
+    struct Range
+    {
+        bool empty { true };
+        u8 first { 0 };
+        u8 last { 0 };
+    };
 
-            Formatting::format_into(b, "'", sigil::RegexParser::escape(c), "'");
+    bool first = true;
+    auto emit = [&](const Range &range) {
+        if (range.empty)
+            return;
+        if (not first)
+            Formatting::format_into(b, ", ");
+        first = false;
+
+        Formatting::format_into(
+            b, "'", sigil::RegexParser::escape(range.first), "'");
+        if (range.first != range.last) {
+            Formatting::format_into(
+                b, " - '", sigil::RegexParser::escape(range.last), "'");
+        }
+    };
+
+    Range current;
+    for (auto i = sigil::CharSet::first; i <= sigil::CharSet::last; ++i) {
+        const auto c = u8(i);
+        if (char_set.contains(c)) {
+            if (current.last + 1 == c) {
+                // extend range
+                current.empty = false;
+                current.last = c;
+            } else {
+                emit(current);
+                current = Range();
+                current.empty = false;
+                current.first = c;
+                current.last = c;
+            }
         }
     }
+    emit(current);
 }
 
 }  // namespace core

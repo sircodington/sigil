@@ -82,19 +82,12 @@ static void regex_parser_tests()
     expect_eq(parse_regex("[]"), "Atom()");
 
     expect_eq(parse_regex("[a]"), "Atom('a')");
-    expect_eq(parse_regex("[ab]"), "Atom('a','b')");
-    expect_eq(parse_regex("[a-c]"), "Atom('a','b','c')");
-    expect_eq(
-        parse_regex("[a-zA-Z]"),
-        "Atom('A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P',"
-        "'Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g',"
-        "'h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x',"
-        "'y','z')");
+    expect_eq(parse_regex("[ab]"), "Atom('a' - 'b')");
+    expect_eq(parse_regex("[a-c]"), "Atom('a' - 'c')");
+    expect_eq(parse_regex("[a-zA-Z]"), "Atom('A' - 'Z', 'a' - 'z')");
 
-    expect_eq(parse_regex("[-a]"), "Atom('-','a')");
-    expect_eq(
-        parse_regex("[^\\u00-/:-\\uFF]"),
-        "Atom('0','1','2','3','4','5','6','7','8','9')");
+    expect_eq(parse_regex("[-a]"), "Atom('-', 'a')");
+    expect_eq(parse_regex("[^\\u00-/:-\\uFF]"), "Atom('0' - '9')");
 }
 
 void sigil_tests() { regex_parser_tests(); }

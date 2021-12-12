@@ -23,7 +23,7 @@ public:
     Either<StringView, RegExp *> parse();
 
     static bool unescape(u8 &result, u8 &advance, const core::StringView &);
-    static String escape(char c);
+    static String escape(u8 c);
 
 private:
     template<typename T, typename... Args>
