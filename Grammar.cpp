@@ -179,8 +179,13 @@ struct NfaState
 
 struct DfaState
 {
+    DfaState(Set<NfaState> nfa_states, dfa::State *dfa_state)
+        : nfa_states(std::move(nfa_states))
+        , dfa_state(dfa_state)
+    {
+    }
     Set<NfaState> nfa_states;
-    dfa::State *dfa_state;
+    dfa::State *dfa_state { nullptr };
 };
 
 template<typename Callback>
@@ -248,7 +253,7 @@ static Set<NfaState> reachable_by_char(const Set<NfaState> &states, u8 c)
     return reachable;
 }
 
-static DfaState *dfa_start_state(
+static Set<NfaState> dfa_start_state(
     dfa::Automaton &dfa,
     Map<Set<NfaState>, DfaState *> &mapping,
     const List<nfa::Automaton> &nfas)
@@ -258,15 +263,23 @@ static DfaState *dfa_start_state(
         NfaState nfa_state { &nfa, start_state(nfa) };
         nfa_start_states.add(std::move(nfa_state));
     }
+    return nfa_start_states;
+}
 
-    auto nfa_states = reachable_by_epsilon(nfa_start_states);
-    if (not mapping.contains(nfa_states)) {
+static DfaState *create_or_get_dfa_state(
+    core::Arena &arena,
+    dfa::Automaton &dfa,
+    Map<Set<NfaState>, DfaState *> &mapping,
+    const Set<NfaState> &states)
+{
+    if (not mapping.contains(states)) {
         auto state = dfa.create_state();
-        state->start = true;
-        auto dfa_state = new DfaState { nfa_states, state };  // @TODO: Arena?
-        mapping.add(nfa_states, dfa_state);
+        if (states.is_empty())
+            state->type = dfa::State::Type::Error;
+        auto new_state = arena.construct<DfaState>(states, state);
+        mapping.add(states, new_state);
     }
-    return mapping.get(nfa_states);
+    return mapping.get(states);
 }
 
 static dfa::Automaton create_dfa(
@@ -276,7 +289,12 @@ static dfa::Automaton create_dfa(
     Map<Set<NfaState>, DfaState *> mapping;
     List<DfaState *> dfa_state_queue;
 
-    auto *dfa_start = dfa_start_state(dfa, mapping, nfas);
+    auto *dfa_start = create_or_get_dfa_state(
+        arena,
+        dfa,
+        mapping,
+        reachable_by_epsilon(dfa_start_state(dfa, mapping, nfas)));
+    dfa_start->dfa_state->start = true;
     dfa_state_queue.add(dfa_start);
 
     for (Index i = 0; i < dfa_state_queue.size(); ++i) {
@@ -285,17 +303,10 @@ static dfa::Automaton create_dfa(
         for (auto c = CharSet::first; c <= CharSet::last; ++c) {
             auto reachable = reachable_by_epsilon(
                 reachable_by_char(dfa_state->nfa_states, c));
-
-            if (not mapping.contains(reachable)) {
-                auto state = dfa.create_state();
-                if (reachable.is_empty())
-                    state->type = dfa::State::Type::Error;
-                auto new_state =
-                    new DfaState { reachable, state };  // @TODO: Arena?
+            auto new_state =
+                create_or_get_dfa_state(arena, dfa, mapping, reachable);
+            if (not dfa_state_queue.contains(new_state))
                 dfa_state_queue.add(new_state);
-                mapping.add(reachable, new_state);
-            }
-            auto new_state = mapping.get(reachable);
 
             dfa::Arc *arc_between = nullptr;
             for (auto arc : dfa.arcs()) {
@@ -313,7 +324,6 @@ static dfa::Automaton create_dfa(
         }
 
         // @TODO: Label accepting states (Remember which token they represent)
-        // @TODO: Optimize allocations e.g. using Arena?
         // @TODO: Optimize Set and Map
         // @TODO: Unit-testing nfa?, dfa
         // @TODO: Visualize automatons (maybe using graphvis)
