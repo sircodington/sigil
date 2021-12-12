@@ -10,6 +10,7 @@
 #include <core/Formatting.h>
 #include <core/Map.h>
 #include <core/Set.h>
+#include <sigil/Dfa.h>
 #include <sigil/Nfa.h>
 #include <sigil/RegExp.h>
 #include <sigil/RegexParser.h>
@@ -179,7 +180,7 @@ struct NfaState
 struct DfaState
 {
     Set<NfaState> nfa_states;
-    nfa::State *dfa_state;
+    dfa::State *dfa_state;
 };
 
 template<typename Callback>
@@ -248,7 +249,7 @@ static Set<NfaState> reachable_by_char(const Set<NfaState> &states, u8 c)
 }
 
 static DfaState *dfa_start_state(
-    nfa::Automaton &dfa,
+    dfa::Automaton &dfa,
     Map<Set<NfaState>, DfaState *> &mapping,
     const List<nfa::Automaton> &nfas)
 {
@@ -268,10 +269,10 @@ static DfaState *dfa_start_state(
     return mapping.get(nfa_states);
 }
 
-static nfa::Automaton create_dfa(
+static dfa::Automaton create_dfa(
     core::Arena &arena, const List<nfa::Automaton> &nfas)
 {
-    nfa::Automaton dfa(arena);
+    dfa::Automaton dfa(arena);
     Map<Set<NfaState>, DfaState *> mapping;
     List<DfaState *> dfa_state_queue;
 
@@ -287,6 +288,8 @@ static nfa::Automaton create_dfa(
 
             if (not mapping.contains(reachable)) {
                 auto state = dfa.create_state();
+                if (reachable.is_empty())
+                    state->type = dfa::State::Type::Error;
                 auto new_state =
                     new DfaState { reachable, state };  // @TODO: Arena?
                 dfa_state_queue.add(new_state);
@@ -294,7 +297,7 @@ static nfa::Automaton create_dfa(
             }
             auto new_state = mapping.get(reachable);
 
-            nfa::Arc *arc_between = nullptr;
+            dfa::Arc *arc_between = nullptr;
             for (auto arc : dfa.arcs()) {
                 if (arc->origin == dfa_state->dfa_state and
                     arc->target == new_state->dfa_state) {
@@ -303,28 +306,29 @@ static nfa::Automaton create_dfa(
                 }
             }
             if (arc_between == nullptr) {
-                arc_between = dfa.create_character_arc(
+                arc_between = dfa.create_arc(
                     dfa_state->dfa_state, new_state->dfa_state, CharSet(c));
             }
             arc_between->char_set.set(c, true);
         }
 
-        // @TODO: Different data structure for dfa?
-        // @TODO: Flag explicit error state as error state (iff `reachable` is
-        // empty)
         // @TODO: Label accepting states (Remember which token they represent)
         // @TODO: Optimize allocations e.g. using Arena?
         // @TODO: Optimize Set and Map
         // @TODO: Unit-testing nfa?, dfa
         // @TODO: Visualize automatons (maybe using graphvis)
-        bool contains_accepting = false;
-        for (const auto &nfa_state : dfa_state->nfa_states) {
-            if (nfa_state.state->accepting) {
-                contains_accepting = true;
-                break;
+
+        using Type = dfa::State::Type;
+        if (Type::Error != dfa_state->dfa_state->type) {
+            Type state_type = Type::Invalid;
+            for (const auto &nfa_state : dfa_state->nfa_states) {
+                if (nfa_state.state->accepting) {
+                    state_type = Type::Accepting;
+                    break;
+                }
             }
+            dfa_state->dfa_state->type = state_type;
         }
-        dfa_state->dfa_state->accepting = contains_accepting;
     }
 
     return dfa;
