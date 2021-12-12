@@ -50,8 +50,11 @@ inline static void log_state(
     Formatting::format_into(b, state.id);
     if (state.is_error())
         Formatting::format_into(b, "!");
-    if (state.is_accepting())
+    if (state.is_accepting()) {
+        Formatting::format_into(b, ",");
+        Formatting::format_into(b, state.token_index);
         Formatting::format_into(b, ")");
+    }
 }
 
 inline static void format_indentation(core::StringBuilder &b, int level)

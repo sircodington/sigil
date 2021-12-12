@@ -32,6 +32,7 @@ struct State
     const u64 id { 0 };
     bool start { false };
     Type type { Type::Invalid };
+    s64 token_index { -1 };
 };
 
 struct Arc

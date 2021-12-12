@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
+#include <algorithm>  // std::min
+
 #include "Grammar.h"
 
 #include <core/Arena.h>
@@ -282,6 +284,29 @@ static DfaState *create_or_get_dfa_state(
     return mapping.get(states);
 }
 
+static s64 smallest_index_within(
+    const List<nfa::Automaton> &nfas,
+    const List<const nfa::Automaton *> &accepting)
+{
+    s64 smallest_index = std::numeric_limits<s64>::max();
+
+    for (auto nfa : accepting) {
+        s64 current_index = -1;
+        for (s64 i = 0; i < nfas.size(); ++i) {
+            if (&nfas[i] == nfa) {
+                current_index = i;
+                break;
+            }
+        }
+
+        assert(current_index >= 0);
+
+        smallest_index = std::min(smallest_index, current_index);
+    }
+
+    return smallest_index;
+}
+
 static dfa::Automaton create_dfa(
     core::Arena &arena, const List<nfa::Automaton> &nfas)
 {
@@ -323,21 +348,23 @@ static dfa::Automaton create_dfa(
             arc_between->char_set.set(c, true);
         }
 
-        // @TODO: Label accepting states (Remember which token they represent)
-        // @TODO: Optimize Set and Map
         // @TODO: Unit-testing nfa?, dfa
+        // @TODO: Optimize Set and Map
         // @TODO: Visualize automatons (maybe using graphvis)
 
         using Type = dfa::State::Type;
         if (Type::Error != dfa_state->dfa_state->type) {
-            Type state_type = Type::Invalid;
+            List<const nfa::Automaton *> accepting;
             for (const auto &nfa_state : dfa_state->nfa_states) {
-                if (nfa_state.state->accepting) {
-                    state_type = Type::Accepting;
-                    break;
-                }
+                if (nfa_state.state->accepting)
+                    accepting.add(nfa_state.nfa);
             }
-            dfa_state->dfa_state->type = state_type;
+
+            if (accepting.non_empty()) {
+                dfa_state->dfa_state->type = Type::Accepting;
+                dfa_state->dfa_state->token_index =
+                    smallest_index_within(nfas, accepting);
+            }
         }
     }
 
