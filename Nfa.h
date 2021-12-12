@@ -64,8 +64,6 @@ public:
     }
     [[nodiscard]] constexpr const List<Arc *> &arcs() const { return m_arcs; }
 
-    static void format(core::StringBuilder &, const Automaton &);
-
 private:
     core::Arena &m_arena;
     List<State *> m_states;
@@ -73,3 +71,14 @@ private:
 };
 
 }  // namespace sigil::nfa
+
+namespace core {
+
+template<>
+class Formatter<sigil::nfa::Automaton>
+{
+public:
+    static void format(StringBuilder &, const sigil::nfa::Automaton &);
+};
+
+}  // namespace core

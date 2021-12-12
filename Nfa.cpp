@@ -44,7 +44,12 @@ Arc *Automaton::create_character_arc(
     return arc;
 }
 
-inline static void log_state(core::StringBuilder &b, const State &state)
+}  // namespace sigil::nfa
+
+namespace core {
+
+inline static void log_state(
+    core::StringBuilder &b, const sigil::nfa::State &state)
 {
     if (state.accepting)
         Formatting::format_into(b, "(");
@@ -60,7 +65,8 @@ inline static void format_indentation(core::StringBuilder &b, int level)
     for (auto i = 0; i < level; ++i) Formatting::format_into(b, "  ");
 }
 
-void Automaton::format(core::StringBuilder &b, const nfa::Automaton &automaton)
+void Formatter<sigil::nfa::Automaton>::format(
+    StringBuilder &b, const sigil::nfa::Automaton &automaton)
 {
     Formatting::format_into(b, "nfa::Automaton {\n");
     for (const auto state : automaton.states()) {
@@ -91,4 +97,4 @@ void Automaton::format(core::StringBuilder &b, const nfa::Automaton &automaton)
     Formatting::format_into(b, "}");
 }
 
-}  // namespace sigil::nfa
+}  // namespace core

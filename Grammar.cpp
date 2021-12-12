@@ -344,18 +344,13 @@ Either<StringView, Grammar> sigil::Grammar::compile(
 
         auto automaton = std::move(either_automaton.release_right());
 
-        //        // @TODO: Automaton can't be copied! Is this our Lists fault?
-        //        core::StringBuilder builder;
-        //        nfa::Automaton::format(builder, automaton);
-        //        debug_log(builder.toString(), "\n");
+        // debug_log(automaton, "\n");
 
         nfas.add(std::move(automaton));
     }
 
     auto dfa = create_dfa(arena, nfas);
-    core::StringBuilder builder;
-    nfa::Automaton::format(builder, dfa);
-    debug_log(builder.toString(), "\n");
+    debug_log(dfa, "\n");
 
     Grammar grammar;
     return Either<StringView, Grammar>::right(std::move(grammar));
