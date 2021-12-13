@@ -68,6 +68,8 @@ public:
     }
     [[nodiscard]] constexpr const List<Arc *> &arcs() const { return m_arcs; }
 
+    [[nodiscard]] const dfa::State *start_state() const;
+
 private:
     core::Arena &arena() { return *m_arena; }
 

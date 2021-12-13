@@ -36,6 +36,18 @@ Arc *Automaton::create_arc(State *origin, State *target, CharSet char_set)
     return arc;
 }
 
+const dfa::State *Automaton::start_state() const
+{
+    dfa::State *result = nullptr;
+    for (auto &state : states()) {
+        if (state->start) {
+            assert(result == nullptr and "Multiple start states");
+            result = state;
+        }
+    }
+    return result;
+}
+
 }  // namespace sigil::dfa
 
 namespace core {

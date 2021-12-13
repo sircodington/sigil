@@ -19,18 +19,6 @@
 
 namespace sigil {
 
-nfa::State *start_state(nfa::Automaton &nfa)
-{
-    nfa::State *result = nullptr;
-    for (auto &state : nfa.states()) {
-        if (state->start) {
-            assert(result == nullptr and "Multiple start states");
-            result = state;
-        }
-    }
-    return result;
-}
-
 struct INfa
 {
     nfa::State *start { nullptr };
@@ -262,7 +250,7 @@ static Set<NfaState> dfa_start_state(
 {
     Set<NfaState> nfa_start_states;
     for (auto &nfa : nfas) {
-        NfaState nfa_state { &nfa, start_state(nfa) };
+        NfaState nfa_state { &nfa, nfa.start_state() };
         nfa_start_states.add(std::move(nfa_state));
     }
     return nfa_start_states;

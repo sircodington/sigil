@@ -44,6 +44,18 @@ Arc *Automaton::create_character_arc(
     return arc;
 }
 
+nfa::State *Automaton::start_state() const
+{
+    nfa::State *result = nullptr;
+    for (auto &state : states()) {
+        if (state->start) {
+            assert(result == nullptr and "Multiple start states");
+            result = state;
+        }
+    }
+    return result;
+}
+
 }  // namespace sigil::nfa
 
 namespace core {
