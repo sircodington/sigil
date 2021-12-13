@@ -295,15 +295,15 @@ static s64 smallest_index_within(
     return smallest_index;
 }
 
-static dfa::Automaton create_dfa(
-    core::Arena &arena, const List<nfa::Automaton> &nfas)
+static void create_dfa(
+    sigil::Grammar &grammar, const List<nfa::Automaton> &nfas)
 {
-    dfa::Automaton dfa(arena);
+    auto &dfa = grammar.dfa();
     Map<Set<NfaState>, DfaState *> mapping;
     List<DfaState *> dfa_state_queue;
 
     auto *dfa_start = create_or_get_dfa_state(
-        arena,
+        grammar.arena(),
         dfa,
         mapping,
         reachable_by_epsilon(dfa_start_state(dfa, mapping, nfas)));
@@ -316,8 +316,8 @@ static dfa::Automaton create_dfa(
         for (auto c = CharSet::first; c <= CharSet::last; ++c) {
             auto reachable = reachable_by_epsilon(
                 reachable_by_char(dfa_state->nfa_states, c));
-            auto new_state =
-                create_or_get_dfa_state(arena, dfa, mapping, reachable);
+            auto new_state = create_or_get_dfa_state(
+                grammar.arena(), dfa, mapping, reachable);
             if (not dfa_state_queue.contains(new_state))
                 dfa_state_queue.add(new_state);
 
@@ -355,34 +355,33 @@ static dfa::Automaton create_dfa(
             }
         }
     }
-
-    return dfa;
 }
 
 Either<StringView, Grammar> sigil::Grammar::compile(
     const sigil::Specification &specification)
 {
     using Result = Either<StringView, Grammar>;
-    core::Arena arena;
+    Grammar grammar;
 
     List<nfa::Automaton> nfas(specification.tokens().size());
-    for (Index i = 0; i < specification.tokens().size(); ++i) {
-        auto either_automaton = create_nfa(arena, specification.tokens()[i]);
+    for (const auto &token_spec : specification.tokens()) {
+        auto either_automaton = create_nfa(grammar.arena(), token_spec);
         if (not either_automaton.isRight())
             return Result::left(std::move(either_automaton.release_left()));
 
         auto automaton = std::move(either_automaton.release_right());
-
-        // debug_log(automaton, "\n");
-
         nfas.add(std::move(automaton));
+        grammar.token_names().add(token_spec.name);
     }
 
-    auto dfa = create_dfa(arena, nfas);
-    debug_log(dfa, "\n");
+    create_dfa(grammar, nfas);
 
-    Grammar grammar;
-    return Either<StringView, Grammar>::right(std::move(grammar));
+    return Result::right(std::move(grammar));
+}
+
+Grammar::Grammar()
+    : m_dfa(m_arena)
+{
 }
 
 }  // namespace sigil
