@@ -3,6 +3,7 @@ project(sigil LANGUAGES C CXX)
 set(${PROJECT_NAME}_HEADERS
     CharSet.h
     Dfa.h
+    DfaSimulation.h
     Grammar.h
     Nfa.h
     RegExp.h
@@ -14,6 +15,7 @@ set(${PROJECT_NAME}_HEADERS
 set(${PROJECT_NAME}_SOURCES
     CharSet.cpp
     Dfa.cpp
+    DfaSimulation.cpp
     Grammar.cpp
     Nfa.cpp
     RegExp.cpp
