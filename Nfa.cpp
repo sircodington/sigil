@@ -11,7 +11,7 @@
 namespace sigil::nfa {
 
 Automaton::Automaton(core::Arena &arena)
-    : m_arena(arena)
+    : m_arena(&arena)
 {
 }
 
@@ -23,14 +23,14 @@ Automaton::~Automaton()
 
 State *Automaton::create_state()
 {
-    auto state = m_arena.construct<State>(m_states.size());
+    auto state = arena().construct<State>(m_states.size());
     m_states.add(state);
     return state;
 }
 
 Arc *Automaton::create_epsilon_arc(State *origin, State *target)
 {
-    auto arc = m_arena.construct<Arc>(Arc::Type::Epsilon, origin, target);
+    auto arc = arena().construct<Arc>(Arc::Type::Epsilon, origin, target);
     m_arcs.add(arc);
     return arc;
 }
@@ -38,7 +38,7 @@ Arc *Automaton::create_epsilon_arc(State *origin, State *target)
 Arc *Automaton::create_character_arc(
     State *origin, State *target, CharSet char_set)
 {
-    auto arc = m_arena.construct<Arc>(Arc::Type::CharSet, origin, target);
+    auto arc = arena().construct<Arc>(Arc::Type::CharSet, origin, target);
     arc->char_set = std::move(char_set);
     m_arcs.add(arc);
     return arc;

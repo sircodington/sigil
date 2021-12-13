@@ -51,7 +51,12 @@ class Automaton
 {
 public:
     explicit Automaton(core::Arena &arena);
+    Automaton(const Automaton &) = delete;
+    Automaton(Automaton &&) = default;
     ~Automaton();
+
+    Automaton &operator=(const Automaton &) = delete;
+    Automaton &operator=(Automaton &&) = default;
 
     State *create_state();
     Arc *create_epsilon_arc(State *origin, State *target);
@@ -65,7 +70,9 @@ public:
     [[nodiscard]] constexpr const List<Arc *> &arcs() const { return m_arcs; }
 
 private:
-    core::Arena &m_arena;
+    core::Arena &arena() { return *m_arena; }
+
+    core::Arena *m_arena { nullptr };
     List<State *> m_states;
     List<Arc *> m_arcs;
 };

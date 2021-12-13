@@ -15,6 +15,11 @@ namespace sigil {
 class Grammar
 {
 public:
+    Grammar(const Grammar &) = delete;
+    Grammar(Grammar &&) = default;
+    Grammar &operator=(const Grammar &) = delete;
+    Grammar &operator=(Grammar &&) = default;
+
     static Either<StringView, Grammar> compile(const Specification &);
 };
 
