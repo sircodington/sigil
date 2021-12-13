@@ -336,7 +336,6 @@ static void create_dfa(
             arc_between->char_set.set(c, true);
         }
 
-        // @TODO: Unit-testing nfa?, dfa
         // @TODO: Optimize Set and Map
         // @TODO: Visualize automatons (maybe using graphvis)
 

@@ -7,6 +7,7 @@
 #include "test.h"
 
 #include <core/Formatting.h>
+#include <sigil/DfaSimulation.h>
 #include <sigil/RegExp.h>
 #include <sigil/RegexParser.h>
 
@@ -90,4 +91,86 @@ static void regex_parser_tests()
     expect_eq(parse_regex("[^\\u00-/:-\\uFF]"), "Atom('0' - '9')");
 }
 
-void sigil_tests() { regex_parser_tests(); }
+static void dfa_simulation_tests_calculator()
+{
+    sigil::Specification spec;
+    spec.add_literal_token("Plus", "+");
+    spec.add_literal_token("Star", "*");
+    spec.add_literal_token("OpenParenthesis", "(");
+    spec.add_literal_token("CloseParenthesis", ")");
+    spec.add_regex_token("Literal", "[0-9]+");
+    spec.add_regex_token("Identifier", "[a-zA-Z_][a-zA-Z0-9_]*");
+    spec.add_regex_token("Whitespace", "[ \\n\\r\\t]+");
+
+    auto either_grammar = sigil::Grammar::compile(spec);
+    if (not either_grammar.isRight()) {
+        debug_log("Error: ", either_grammar.left(), "\n");
+        return;
+    }
+
+    auto grammar = std::move(either_grammar.release_right());
+
+    using namespace sigil::dfa;
+
+    expect_eq(simulate(grammar, "+"), SimulationResult::accept("Plus"));
+    expect_eq(simulate(grammar, "*"), SimulationResult::accept("Star"));
+    expect_eq(
+        simulate(grammar, "("), SimulationResult::accept("OpenParenthesis"));
+    expect_eq(
+        simulate(grammar, ")"), SimulationResult::accept("CloseParenthesis"));
+
+    expect_eq(simulate(grammar, " "), SimulationResult::accept("Whitespace"));
+    expect_eq(simulate(grammar, "  "), SimulationResult::accept("Whitespace"));
+    expect_eq(simulate(grammar, "\n"), SimulationResult::accept("Whitespace"));
+    expect_eq(
+        simulate(grammar, "\n\r"), SimulationResult::accept("Whitespace"));
+    expect_eq(
+        simulate(grammar, "\r\n"), SimulationResult::accept("Whitespace"));
+    expect_eq(simulate(grammar, "\t"), SimulationResult::accept("Whitespace"));
+
+    expect_eq(simulate(grammar, "0"), SimulationResult::accept("Literal"));
+    expect_eq(simulate(grammar, "1"), SimulationResult::accept("Literal"));
+    expect_eq(simulate(grammar, "10"), SimulationResult::accept("Literal"));
+    expect_eq(simulate(grammar, "9999"), SimulationResult::accept("Literal"));
+    expect_eq(simulate(grammar, "12345"), SimulationResult::accept("Literal"));
+
+    expect_eq(simulate(grammar, "if"), SimulationResult::accept("Identifier"));
+    expect_eq(simulate(grammar, "ifx"), SimulationResult::accept("Identifier"));
+    expect_eq(simulate(grammar, "abc"), SimulationResult::accept("Identifier"));
+    expect_eq(
+        simulate(grammar, "my_list"), SimulationResult::accept("Identifier"));
+    expect_eq(
+        simulate(grammar, "Test_3"), SimulationResult::accept("Identifier"));
+}
+
+static void dfa_simulation_tests_conflict()
+{
+    sigil::Specification spec;
+    spec.add_literal_token("KwIf", "if");
+    spec.add_regex_token("Identifier", "[a-zA-Z_][a-zA-Z0-9_]*");
+
+    auto either_grammar = sigil::Grammar::compile(spec);
+    if (not either_grammar.isRight()) {
+        debug_log("Error: ", either_grammar.left(), "\n");
+        return;
+    }
+
+    auto grammar = std::move(either_grammar.release_right());
+
+    using namespace sigil::dfa;
+
+    expect_eq(simulate(grammar, "if"), SimulationResult::accept("KwIf"));
+    expect_eq(simulate(grammar, "ifx"), SimulationResult::accept("Identifier"));
+    expect_eq(simulate(grammar, "abc"), SimulationResult::accept("Identifier"));
+    expect_eq(
+        simulate(grammar, "my_list"), SimulationResult::accept("Identifier"));
+    expect_eq(
+        simulate(grammar, "Test_3"), SimulationResult::accept("Identifier"));
+}
+
+void sigil_tests()
+{
+    regex_parser_tests();
+    dfa_simulation_tests_calculator();
+    dfa_simulation_tests_conflict();
+}
