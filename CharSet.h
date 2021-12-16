@@ -8,6 +8,7 @@
 
 #include <limits>
 
+#include <core/BitField.h>
 #include <core/Formatter.h>
 #include <core/Types.h>
 
@@ -28,7 +29,7 @@ public:
     constexpr static u16 first = std::numeric_limits<u8>::min();
     constexpr static u16 last = std::numeric_limits<u8>::max();
 
-    [[nodiscard]] bool contains(u8 c) const { return m_included[c]; }
+    [[nodiscard]] bool contains(u8 c) const { return m_included.get(c); }
     bool is_empty() const;
     bool non_empty() const { return not is_empty(); }
 
@@ -38,7 +39,7 @@ public:
 
 private:
     constexpr static auto Size = std::numeric_limits<u8>::max() + 1;
-    bool m_included[Size] {};
+    BitField<Size> m_included;
 };
 
 }  // namespace sigil

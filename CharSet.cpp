@@ -29,7 +29,7 @@ bool CharSet::is_empty() const
     return true;
 }
 
-void CharSet::set(u8 i, bool value) { m_included[i] = value; }
+void CharSet::set(u8 i, bool value) { m_included.set(i, value); }
 
 void CharSet::set(u8 first, u8 last, bool value)
 {
