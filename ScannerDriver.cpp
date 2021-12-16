@@ -41,7 +41,7 @@ ScannerDriver::Token ScannerDriver::next()
     if (not m_has_next_token) {
         m_eof_token_returned = true;
         Token eof_token {
-            -2,
+            s32(SpecialTokenType::Eof),
             {},  // @TODO: Maybe point to end of input?
             accepting_range(),
         };
@@ -107,7 +107,7 @@ void ScannerDriver::get_next_token()
     } else {
         if (is_error_state(current.state) and current.offset < m_input.size()) {
             Token error_token {
-                -1,
+                s32(SpecialTokenType::Error),
                 {},
                 accepting_range(),
             };

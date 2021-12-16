@@ -30,9 +30,14 @@ public:
         FilePosition first;
         FilePosition end;  // exclusive
     };
+    enum class SpecialTokenType : s32
+    {
+        Eof = -2,
+        Error = -1,
+    };
     struct Token
     {
-        s32 type { -1 };  // -2 = eof-token, -1 = error token
+        s32 type { s32(SpecialTokenType::Error) };
         StringView lexeme;
         FileRange range;
     };
