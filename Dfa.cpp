@@ -48,6 +48,18 @@ const dfa::State *Automaton::start_state() const
     return result;
 }
 
+const dfa::State *Automaton::error_state() const
+{
+    dfa::State *result = nullptr;
+    for (auto &state : states()) {
+        if (state->is_error()) {
+            assert(result == nullptr and "Multiple error states");
+            result = state;
+        }
+    }
+    return result;
+}
+
 }  // namespace sigil::dfa
 
 namespace core {
