@@ -11,6 +11,7 @@ set(${PROJECT_NAME}_HEADERS
     RegexParser.h
     ScannerDriver.h
     Specification.h
+    TableScannerDriver.h
     test.h
 )
 
@@ -25,6 +26,7 @@ set(${PROJECT_NAME}_SOURCES
     RegexParser.cpp
     ScannerDriver.cpp
     Specification.cpp
+    TableScannerDriver.cpp
     test.cpp
 )
 
