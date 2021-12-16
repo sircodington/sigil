@@ -55,10 +55,10 @@ ScannerDriver::Token ScannerDriver::next()
     return token;
 }
 
-s32 ScannerDriver::get_char()
+u8 ScannerDriver::get_char()
 {
     assert(current.offset < m_input.size());
-    s32 c = u8(m_input[current.offset++]);
+    const auto c = u8(m_input[current.offset++]);
     if (c == '\n') {
         ++current.line;
         current.column = 0;
@@ -70,7 +70,7 @@ s32 ScannerDriver::get_char()
 
 void ScannerDriver::get_next_token()
 {
-    s64 state = start_state();
+    State state = start_state();
     current.state = error_state();
     last_accepting = current;
     first_accepting = current;

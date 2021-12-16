@@ -15,15 +15,16 @@ class DfaScannerDriver final : public ScannerDriver
 {
 public:
     explicit DfaScannerDriver(const dfa::Automaton &dfa);
-    u32 start_state() const final;
-    u32 error_state() const final;
-    s64 next_state(s64 state, s32 character) const final;
-    s64 is_accepting_state(s64 state) const final;
-    s64 is_error_state(s64 state) const final;
-    s64 accepting_token(s64 state) const final;
 
 private:
-    const dfa::State *state_by_id(s64) const;
+    [[nodiscard]] State start_state() const final;
+    [[nodiscard]] State error_state() const final;
+    [[nodiscard]] State next_state(State state, u8 c) const final;
+    [[nodiscard]] bool is_accepting_state(State state) const final;
+    [[nodiscard]] bool is_error_state(State state) const final;
+    [[nodiscard]] TokenType accepting_token(State state) const final;
+
+    [[nodiscard]] const dfa::State *state_by_id(s64) const;
     const dfa::Automaton &m_dfa;
 };
 

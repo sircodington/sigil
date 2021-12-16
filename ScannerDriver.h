@@ -28,25 +28,29 @@ public:
     {
         StringView file_path;
         FilePosition first;
-        FilePosition end; // exclusive
+        FilePosition end;  // exclusive
     };
     struct Token
     {
-        s64 type { -1 };  // -2 = eof-token, -1 = error token
+        s32 type { -1 };  // -2 = eof-token, -1 = error token
         StringView lexeme;
         FileRange range;
     };
     Token next();
 
-private:
-    virtual u32 start_state() const = 0;
-    virtual u32 error_state() const = 0;
-    virtual s64 next_state(s64 state, s32 character) const = 0;
-    virtual s64 is_accepting_state(s64 state) const = 0;
-    virtual s64 is_error_state(s64 state) const = 0;
-    virtual s64 accepting_token(s64 state) const = 0;
+protected:
+    using State = u32;
+    using TokenType = s32;
 
-    s32 get_char();
+private:
+    [[nodiscard]] virtual State start_state() const = 0;
+    [[nodiscard]] virtual State error_state() const = 0;
+    [[nodiscard]] virtual State next_state(State state, u8 c) const = 0;
+    [[nodiscard]] virtual bool is_accepting_state(State state) const = 0;
+    [[nodiscard]] virtual bool is_error_state(State state) const = 0;
+    [[nodiscard]] virtual TokenType accepting_token(State state) const = 0;
+
+    u8 get_char();
     void get_next_token();
 
     StringView m_file_path;
@@ -57,7 +61,7 @@ private:
         u64 offset { 0 };
         u64 line { 0 };
         u64 column { 0 };
-        u32 state;
+        State state;
     };
     Position first_accepting;
     Position last_accepting;

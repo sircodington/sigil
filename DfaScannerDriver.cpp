@@ -13,14 +13,14 @@ DfaScannerDriver::DfaScannerDriver(const dfa::Automaton &dfa)
 {
 }
 
-u32 DfaScannerDriver::start_state() const
+DfaScannerDriver::State DfaScannerDriver::start_state() const
 {
     auto state = m_dfa.start_state();
     assert(state);
-    return u32(state->id);
+    return State(state->id);
 }
 
-u32 DfaScannerDriver::error_state() const
+DfaScannerDriver::State DfaScannerDriver::error_state() const
 {
     dfa::State *state = nullptr;
     for (auto st : m_dfa.states()) {
@@ -33,38 +33,38 @@ u32 DfaScannerDriver::error_state() const
     }
 
     assert(state);
-    return u32(state->id);
+    return State(state->id);
 }
 
-s64 DfaScannerDriver::next_state(s64 state, s32 character) const
+DfaScannerDriver::State DfaScannerDriver::next_state(State state, u8 c) const
 {
     auto source = state_by_id(state);
     assert(source);
 
     for (const auto arc : m_dfa.arcs()) {
-        if (arc->origin == source and arc->char_set.contains(character))
-            return s64(arc->target->id);
+        if (arc->origin == source and arc->char_set.contains(c))
+            return State(arc->target->id);
     }
 
     assert(false and "Unreachable");
-    return -1;
+    return error_state();
 }
 
-s64 DfaScannerDriver::is_accepting_state(s64 state) const
+bool DfaScannerDriver::is_accepting_state(State state) const
 {
     auto l_state = state_by_id(state);
     assert(l_state);
     return l_state->is_accepting();
 }
 
-s64 DfaScannerDriver::is_error_state(s64 state) const
+bool DfaScannerDriver::is_error_state(State state) const
 {
     auto l_state = state_by_id(state);
     assert(l_state);
     return l_state->is_error();
 }
 
-s64 DfaScannerDriver::accepting_token(s64 state) const
+DfaScannerDriver::TokenType DfaScannerDriver::accepting_token(State state) const
 {
     assert(is_accepting_state(state));
     return state_by_id(state)->token_index;
