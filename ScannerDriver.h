@@ -11,6 +11,7 @@
 
 namespace sigil {
 
+// @TODO: generate scanner driver implementation
 class ScannerDriver
 {
 public:
