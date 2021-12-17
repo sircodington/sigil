@@ -13,6 +13,7 @@ set(${PROJECT_NAME}_HEADERS
     Specification.h
     TableScannerDriver.h
     test.h
+    Types.h
 )
 
 set(${PROJECT_NAME}_SOURCES

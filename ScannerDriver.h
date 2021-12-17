@@ -7,6 +7,7 @@
 #pragma once
 
 #include <core/StringView.h>
+#include <sigil/Types.h>
 
 namespace sigil {
 
@@ -42,10 +43,6 @@ public:
         FileRange range;
     };
     Token next();
-
-protected:
-    using State = u32;
-    using TokenType = s32;
 
 private:
     [[nodiscard]] virtual State start_state() const = 0;

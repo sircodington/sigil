@@ -13,14 +13,14 @@ DfaScannerDriver::DfaScannerDriver(const dfa::Automaton &dfa)
 {
 }
 
-DfaScannerDriver::State DfaScannerDriver::start_state() const
+State DfaScannerDriver::start_state() const
 {
     auto state = m_dfa.start_state();
     assert(state);
     return State(state->id);
 }
 
-DfaScannerDriver::State DfaScannerDriver::error_state() const
+State DfaScannerDriver::error_state() const
 {
     dfa::State *state = nullptr;
     for (auto st : m_dfa.states()) {
@@ -36,7 +36,7 @@ DfaScannerDriver::State DfaScannerDriver::error_state() const
     return State(state->id);
 }
 
-DfaScannerDriver::State DfaScannerDriver::next_state(State state, u8 c) const
+State DfaScannerDriver::next_state(State state, u8 c) const
 {
     auto source = state_by_id(state);
     assert(source);
@@ -64,13 +64,13 @@ bool DfaScannerDriver::is_error_state(State state) const
     return l_state->is_error();
 }
 
-DfaScannerDriver::TokenType DfaScannerDriver::accepting_token(State state) const
+TokenType DfaScannerDriver::accepting_token(State state) const
 {
     assert(is_accepting_state(state));
     return state_by_id(state)->token_index;
 }
 
-const dfa::State *DfaScannerDriver::state_by_id(s64 id) const
+const dfa::State *DfaScannerDriver::state_by_id(State id) const
 {
     if (id < 0)
         return nullptr;

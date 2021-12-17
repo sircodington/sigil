@@ -24,7 +24,7 @@ private:
     [[nodiscard]] bool is_error_state(State state) const final;
     [[nodiscard]] TokenType accepting_token(State state) const final;
 
-    [[nodiscard]] const dfa::State *state_by_id(s64) const;
+    [[nodiscard]] const dfa::State *state_by_id(State) const;
     const dfa::Automaton &m_dfa;
 };
 
