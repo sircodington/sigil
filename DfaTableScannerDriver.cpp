@@ -4,24 +4,23 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-#include "TableScannerDriver.h"
+#include "DfaTableScannerDriver.h"
 
 namespace sigil {
 
-TableScannerDriver::TableScannerDriver(
-    State start_state,
-    State error_state,
+DfaTableScannerDriver::DfaTableScannerDriver(
     List<State> transitions,
-    List<TokenType> accepting)
-    : m_start_state(start_state)
-    , m_error_state(error_state)
-    , m_transitions(std::move(transitions))
+    List<TokenType> accepting,
+    StaticTableScannerDriver underlying)
+    : m_transitions(std::move(transitions))
     , m_accepting(std::move(accepting))
+    , m_underlying(std::move(underlying))
 {
 }
 
-TableScannerDriver TableScannerDriver::create(const dfa::Automaton &dfa)
+DfaTableScannerDriver DfaTableScannerDriver::create(const dfa::Automaton &dfa)
 {
+    // @TODO: Minimize dfa (mfa) to get smaller tables
     State start_state = dfa.start_state()->id;
     State error_state = dfa.error_state()->id;
     const auto state_count = dfa.states().size();
@@ -50,8 +49,11 @@ TableScannerDriver TableScannerDriver::create(const dfa::Automaton &dfa)
             accepting[state->id] = state->token_index;
     }
 
-    return TableScannerDriver(
-        start_state, error_state, std::move(transitions), std::move(accepting));
+    StaticTable static_table(
+        start_state, error_state, transitions.to_view(), accepting.to_view());
+    StaticTableScannerDriver underlying(static_table);
+    return DfaTableScannerDriver(
+        std::move(transitions), std::move(accepting), std::move(underlying));
 }
 
 }  // namespace sigil

@@ -8,32 +8,22 @@
 
 #include <sigil/Dfa.h>
 #include <sigil/ScannerDriver.h>
+#include <sigil/StaticTable.h>
 
 namespace sigil {
 
-class TableScannerDriver final : public ScannerDriver
+class StaticTableScannerDriver final : public ScannerDriver
 {
 public:
-    TableScannerDriver(const TableScannerDriver &) = delete;
-    TableScannerDriver(TableScannerDriver &&) = default;
-    TableScannerDriver &operator=(const TableScannerDriver &) = delete;
-    TableScannerDriver &operator=(TableScannerDriver &&) = default;
+    StaticTableScannerDriver(const StaticTableScannerDriver &) = delete;
+    StaticTableScannerDriver(StaticTableScannerDriver &&) = default;
+    StaticTableScannerDriver &operator=(const StaticTableScannerDriver &) =
+        delete;
+    StaticTableScannerDriver &operator=(StaticTableScannerDriver &&) = default;
 
-    // @TODO: Option<TableScannerDriver> for error handling
-    static TableScannerDriver create(const dfa::Automaton &);
+    explicit StaticTableScannerDriver(const StaticTable &);
 
-private:
-    TableScannerDriver(
-        State start_state,
-        State error_state,
-        List<State> transitions,
-        List<TokenType> accepting);
-
-    inline static Index table_index(State state, u8 c)
-    {
-        constexpr auto char_count = std::numeric_limits<u8>::max() + 1;
-        return c + state * char_count;
-    }
+    [[nodiscard]] StaticTable static_table() const;
 
     [[nodiscard]] State start_state() const final { return m_start_state; }
     [[nodiscard]] State error_state() const final { return m_error_state; }
@@ -55,10 +45,17 @@ private:
         return m_accepting[state];
     }
 
+private:
+    inline static Index table_index(State state, u8 c)
+    {
+        constexpr auto char_count = std::numeric_limits<u8>::max() + 1;
+        return c + state * char_count;
+    }
+
     State m_start_state;
     State m_error_state;
-    List<State> m_transitions;
-    List<TokenType> m_accepting;
+    ListView<State> m_transitions;
+    ListView<TokenType> m_accepting;
 };
 
 }  // namespace sigil
