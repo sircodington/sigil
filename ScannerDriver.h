@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <core/RingBuffer.h>
 #include <core/StringView.h>
 #include <sigil/Types.h>
 
@@ -19,7 +20,6 @@ public:
     virtual ~ScannerDriver() = default;
 
     virtual void initialize(StringView file_path, StringView input);
-    bool has_next();
 
     struct FilePosition
     {
@@ -43,9 +43,50 @@ public:
         StringView lexeme;
         FileRange range;
     };
+
+    inline bool can_lookahead(Index offset = 0)
+    {
+        return require_offset(offset);
+    }
+    inline const Token &lookahead(Index offset = 0)
+    {
+        assert(can_lookahead(offset));
+        return m_lookahead.lookahead(offset);
+    }
+    inline bool can_consume(Size count = 1)
+    {
+        return require_offset(count - 1);
+    }
+    inline Token consume(Size count = 1)
+    {
+        assert(can_consume(count));
+        for (Size i = 0; i < count; ++i) {
+            auto token = m_lookahead.consume();
+            if (i == count - 1)
+                return token;
+        }
+
+        assert(false and "Unreachable");
+        return {};
+    }
+
+    // @FIXME: Switching to the lookahead api makes the scanner slower
+    bool has_next();
     Token next();
 
 private:
+    constexpr static Size Lookahead { 64 };
+    inline bool require_offset(Index offset)
+    {
+        assert(offset <= Lookahead);
+        if (m_lookahead.size() <= offset) {
+            while (not m_lookahead.full() and has_next()) {
+                m_lookahead.write(next());
+            }
+        }
+        return offset < m_lookahead.size();
+    }
+
     [[nodiscard]] virtual State start_state() const = 0;
     [[nodiscard]] virtual State error_state() const = 0;
     [[nodiscard]] virtual State next_state(State state, u8 c) const = 0;
@@ -75,6 +116,8 @@ private:
     bool m_scan_error { false };
     bool m_eof_token_returned { false };
     Token m_next_token;
+
+    RingBuffer<Token, Lookahead> m_lookahead;
 };
 
 }  // namespace sigil
