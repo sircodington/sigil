@@ -1,0 +1,3 @@
+[submodule "libraries/core"]
+	path = libraries/core
+	url = git@github.com:sircodington/core.git

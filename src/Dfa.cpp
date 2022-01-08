@@ -4,11 +4,11 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-#include "Nfa.h"
+#include <sigil/Dfa.h>
 
 #include <core/Formatting.h>
 
-namespace sigil::nfa {
+namespace sigil::dfa {
 
 Automaton::Automaton(core::Arena &arena)
     : m_arena(&arena)
@@ -28,25 +28,17 @@ State *Automaton::create_state()
     return state;
 }
 
-Arc *Automaton::create_epsilon_arc(State *origin, State *target)
+Arc *Automaton::create_arc(State *origin, State *target, CharSet char_set)
 {
-    auto arc = arena().construct<Arc>(Arc::Type::Epsilon, origin, target);
-    m_arcs.add(arc);
-    return arc;
-}
-
-Arc *Automaton::create_character_arc(
-    State *origin, State *target, CharSet char_set)
-{
-    auto arc = arena().construct<Arc>(Arc::Type::CharSet, origin, target);
+    auto arc = arena().construct<Arc>(origin, target);
     arc->char_set = std::move(char_set);
     m_arcs.add(arc);
     return arc;
 }
 
-nfa::State *Automaton::start_state() const
+const dfa::State *Automaton::start_state() const
 {
-    nfa::State *result = nullptr;
+    dfa::State *result = nullptr;
     for (auto &state : states()) {
         if (state->start) {
             assert(result == nullptr and "Multiple start states");
@@ -56,20 +48,37 @@ nfa::State *Automaton::start_state() const
     return result;
 }
 
-}  // namespace sigil::nfa
+const dfa::State *Automaton::error_state() const
+{
+    dfa::State *result = nullptr;
+    for (auto &state : states()) {
+        if (state->is_error()) {
+            assert(result == nullptr and "Multiple error states");
+            result = state;
+        }
+    }
+    return result;
+}
+
+}  // namespace sigil::dfa
 
 namespace core {
 
 inline static void log_state(
-    core::StringBuilder &b, const sigil::nfa::State &state)
+    core::StringBuilder &b, const sigil::dfa::State &state)
 {
-    if (state.accepting)
+    if (state.is_accepting())
         Formatting::format_into(b, "(");
     if (state.start)
         Formatting::format_into(b, "*");
     Formatting::format_into(b, state.id);
-    if (state.accepting)
+    if (state.is_error())
+        Formatting::format_into(b, "!");
+    if (state.is_accepting()) {
+        Formatting::format_into(b, ",");
+        Formatting::format_into(b, state.token_index);
         Formatting::format_into(b, ")");
+    }
 }
 
 inline static void format_indentation(core::StringBuilder &b, int level)
@@ -77,10 +86,10 @@ inline static void format_indentation(core::StringBuilder &b, int level)
     for (auto i = 0; i < level; ++i) Formatting::format_into(b, "  ");
 }
 
-void Formatter<sigil::nfa::Automaton>::format(
-    StringBuilder &b, const sigil::nfa::Automaton &automaton)
+void Formatter<sigil::dfa::Automaton>::format(
+    StringBuilder &b, const sigil::dfa::Automaton &automaton)
 {
-    Formatting::format_into(b, "nfa::Automaton {\n");
+    Formatting::format_into(b, "dfa::Automaton {\n");
     for (const auto state : automaton.states()) {
         format_indentation(b, 1);
         log_state(b, *state);
@@ -92,15 +101,7 @@ void Formatter<sigil::nfa::Automaton>::format(
 
             format_indentation(b, 2);
             Formatting::format_into(b, "--- ");
-
             core::Formatting::format_into(b, arc->char_set);
-            if (arc->is_epsilon()) {
-                if (arc->char_set.non_empty())
-                    core::Formatting::format_into(b, ", ");
-
-                core::Formatting::format_into(b, "epsilon");
-            }
-
             Formatting::format_into(b, " ---> ");
             log_state(b, *arc->target);
             Formatting::format_into(b, "\n");

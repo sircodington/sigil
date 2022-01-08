@@ -4,11 +4,11 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
+#include <sigil/CharSet.h>
+
 #include <algorithm>
-
-#include "CharSet.h"
-
 #include <core/Formatting.h>
+
 #include <sigil/RegexParser.h>
 
 namespace sigil {

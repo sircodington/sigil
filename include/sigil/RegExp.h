@@ -8,6 +8,7 @@
 
 #include <core/Formatter.h>
 #include <core/Types.h>
+
 #include <sigil/CharSet.h>
 
 namespace sigil {

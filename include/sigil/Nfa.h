@@ -9,40 +9,40 @@
 #include <core/Arena.h>
 #include <core/Formatter.h>
 #include <core/List.h>
+
 #include <sigil/CharSet.h>
 
-namespace sigil::dfa {
+namespace sigil::nfa {
 
 struct State
 {
-    enum class Type : u8
-    {
-        Invalid,
-        Error,
-        Accepting,
-    };
     explicit State(u64 id)
         : id(id)
     {
     }
-
-    [[nodiscard]] bool is_accepting() const { return Type::Accepting == type; }
-    [[nodiscard]] bool is_error() const { return Type::Error == type; }
-
     const u64 id { 0 };
     bool start { false };
-    Type type { Type::Invalid };
-    s32 token_index { -1 };
+    bool accepting { false };
 };
 
 struct Arc
 {
-    Arc(State *origin, State *target)
-        : origin(origin)
+    enum class Type : u8
+    {
+        Epsilon,
+        CharSet,
+    };
+    Arc(Type type, State *origin, State *target)
+        : type(type)
+        , origin(origin)
         , target(target)
     {
     }
 
+    [[nodiscard]] bool is_epsilon() const { return Type::Epsilon == type; }
+    [[nodiscard]] bool is_character() const { return Type::CharSet == type; }
+
+    Type type;
     State *origin { nullptr };
     State *target { nullptr };
     CharSet char_set;
@@ -60,7 +60,9 @@ public:
     Automaton &operator=(Automaton &&) = default;
 
     State *create_state();
-    Arc *create_arc(State *origin, State *target, CharSet char_set = CharSet());
+    Arc *create_epsilon_arc(State *origin, State *target);
+    Arc *create_character_arc(
+        State *origin, State *target, CharSet char_set = CharSet());
 
     [[nodiscard]] constexpr const List<State *> &states() const
     {
@@ -68,8 +70,7 @@ public:
     }
     [[nodiscard]] constexpr const List<Arc *> &arcs() const { return m_arcs; }
 
-    [[nodiscard]] const dfa::State *start_state() const;
-    [[nodiscard]] const dfa::State *error_state() const;
+    [[nodiscard]] nfa::State *start_state() const;
 
 private:
     core::Arena &arena() { return *m_arena; }
@@ -79,15 +80,15 @@ private:
     List<Arc *> m_arcs;
 };
 
-}  // namespace sigil::dfa
+}  // namespace sigil::nfa
 
 namespace core {
 
 template<>
-class Formatter<sigil::dfa::Automaton>
+class Formatter<sigil::nfa::Automaton>
 {
 public:
-    static void format(StringBuilder &, const sigil::dfa::Automaton &);
+    static void format(StringBuilder &, const sigil::nfa::Automaton &);
 };
 
 }  // namespace core

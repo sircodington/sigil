@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-#include "DfaTableScannerDriver.h"
+#include <sigil/DfaTableScannerDriver.h>
 
 namespace sigil {
 

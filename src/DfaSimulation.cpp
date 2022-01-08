@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-#include "DfaSimulation.h"
+#include <sigil/DfaSimulation.h>
 
 #include <core/Formatting.h>
 

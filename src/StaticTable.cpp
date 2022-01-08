@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-#include "StaticTable.h"
+#include <sigil/StaticTable.h>
 
 #include <core/Formatting.h>
 

@@ -12,6 +12,7 @@
 
 namespace sigil {
 
+// @TODO: Unfinal this class and other subclasses of ScannerDriver
 class DfaTableScannerDriver final : public ScannerDriver
 {
 public:

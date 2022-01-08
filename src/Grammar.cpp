@@ -6,12 +6,13 @@
 
 #include <algorithm>  // std::min
 
-#include "Grammar.h"
+#include <sigil/Grammar.h>
 
 #include <core/Arena.h>
 #include <core/Formatting.h>
 #include <core/Map.h>
 #include <core/Set.h>
+
 #include <sigil/Dfa.h>
 #include <sigil/Nfa.h>
 #include <sigil/RegExp.h>

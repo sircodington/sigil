@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-#include "StaticTableScannerDriver.h"
+#include <sigil/StaticTableScannerDriver.h>
 
 namespace sigil {
 

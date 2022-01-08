@@ -7,6 +7,7 @@
 #pragma once
 
 #include <core/Formatter.h>
+
 #include <sigil/Grammar.h>
 
 namespace sigil::dfa {

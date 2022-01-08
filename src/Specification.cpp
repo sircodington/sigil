@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-#include "Specification.h"
+#include <sigil/Specification.h>
 
 #include <core/Formatting.h>
 

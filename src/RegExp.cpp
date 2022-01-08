@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-#include "RegExp.h"
+#include <sigil/RegExp.h>
 
 #include <cassert>
 

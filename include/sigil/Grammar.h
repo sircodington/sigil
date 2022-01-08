@@ -10,6 +10,7 @@
 #include <core/Either.h>
 #include <core/List.h>
 #include <core/StringView.h>
+
 #include <sigil/Dfa.h>
 #include <sigil/Specification.h>
 

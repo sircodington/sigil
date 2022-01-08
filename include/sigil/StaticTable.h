@@ -8,6 +8,7 @@
 
 #include <core/Formatter.h>
 #include <core/ListView.h>
+
 #include <sigil/Types.h>
 
 namespace sigil {
