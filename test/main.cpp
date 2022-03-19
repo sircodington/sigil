@@ -11,6 +11,7 @@
 #include <sigil/RegExp.h>
 #include <sigil/RegexParser.h>
 #include <sigil/ScannerDriver.h>
+#include <sigil/SpecialTokenType.h>
 
 #define expect_eq(actual, expect)                  \
     do {                                           \
@@ -94,14 +95,28 @@ static void regex_parser_tests()
 
 static void dfa_simulation_tests_calculator()
 {
+    enum class Type : s32
+    {
+        Eof = s32(sigil::SpecialTokenType::Eof),
+        Error = s32(sigil::SpecialTokenType::Error),
+        Plus,
+        Star,
+        OpenParenthesis,
+        CloseParenthesis,
+        Literal,
+        Identifier,
+        Whitespace,
+    };
     sigil::Specification spec;
-    spec.add_literal_token("Plus", "+");
-    spec.add_literal_token("Star", "*");
-    spec.add_literal_token("OpenParenthesis", "(");
-    spec.add_literal_token("CloseParenthesis", ")");
-    spec.add_regex_token("Literal", "[0-9]+");
-    spec.add_regex_token("Identifier", "[a-zA-Z_][a-zA-Z0-9_]*");
-    spec.add_regex_token("Whitespace", "[ \\n\\r\\t]+");
+    spec.add_literal_token((s32)Type::Plus, "Plus", "+");
+    spec.add_literal_token((s32)Type::Star, "Star", "*");
+    spec.add_literal_token((s32)Type::OpenParenthesis, "OpenParenthesis", "(");
+    spec.add_literal_token(
+        (s32)Type::CloseParenthesis, "CloseParenthesis", ")");
+    spec.add_regex_token((s32)Type::Literal, "Literal", "[0-9]+");
+    spec.add_regex_token(
+        (s32)Type::Identifier, "Identifier", "[a-zA-Z_][a-zA-Z0-9_]*");
+    spec.add_regex_token((s32)Type::Whitespace, "Whitespace", "[ \\n\\r\\t]+");
 
     auto either_grammar = sigil::Grammar::compile(spec);
     if (not either_grammar.isRight()) {
@@ -146,9 +161,17 @@ static void dfa_simulation_tests_calculator()
 
 static void dfa_simulation_tests_conflict()
 {
+    enum class Type : s32
+    {
+        Eof = s32(sigil::SpecialTokenType::Eof),
+        Error = s32(sigil::SpecialTokenType::Error),
+        KwIf,
+        Identifier,
+    };
     sigil::Specification spec;
-    spec.add_literal_token("KwIf", "if");
-    spec.add_regex_token("Identifier", "[a-zA-Z_][a-zA-Z0-9_]*");
+    spec.add_literal_token((s32)Type::KwIf, "KwIf", "if");
+    spec.add_regex_token(
+        (s32)Type::Identifier, "Identifier", "[a-zA-Z_][a-zA-Z0-9_]*");
 
     auto either_grammar = sigil::Grammar::compile(spec);
     if (not either_grammar.isRight()) {
@@ -173,8 +196,8 @@ static void scanner_detect_eof_instead_of_error()
 {
     enum class TokenType : int8_t
     {
-        Eof = int8_t(sigil::ScannerDriver::SpecialTokenType::Eof),
-        Error = int8_t(sigil::ScannerDriver::SpecialTokenType::Error),
+        Eof = int8_t(sigil::SpecialTokenType::Eof),
+        Error = int8_t(sigil::SpecialTokenType::Error),
         Word,
         QMark,
     };
@@ -192,8 +215,9 @@ static void scanner_detect_eof_instead_of_error()
 
     {
         sigil::Specification specification;
-        specification.add_regex_token("Word", "[-a-zA-Z/]+");
-        specification.add_literal_token("QMark", "?");
+        specification.add_regex_token(
+            (s32)TokenType::Word, "Word", "[-a-zA-Z/]+");
+        specification.add_literal_token((s32)TokenType::QMark, "QMark", "?");
         auto either_grammar = sigil::Grammar::compile(specification);
         auto grammar = std::move(either_grammar.release_right());
         auto scanner = sigil::DfaTableScannerDriver::create(grammar.dfa());
@@ -205,7 +229,8 @@ static void scanner_detect_eof_instead_of_error()
 
     {
         sigil::Specification specification;
-        specification.add_regex_token("Word", "[-a-zA-Z/]+");
+        specification.add_regex_token(
+            (s32)TokenType::Word, "Word", "[-a-zA-Z/]+");
         auto either_grammar = sigil::Grammar::compile(specification);
         auto grammar = std::move(either_grammar.release_right());
         auto scanner = sigil::DfaTableScannerDriver::create(grammar.dfa());
@@ -215,12 +240,30 @@ static void scanner_detect_eof_instead_of_error()
     }
 }
 
+static void user_controlled_token_values()
+{
+    sigil::Specification specification;
+    specification.add_literal_token(1, "A", "a");
+    specification.add_literal_token(42, "B", "b");
+    specification.add_literal_token(55, "C", "c");
+
+    auto either_grammar = sigil::Grammar::compile(specification);
+    auto grammar = std::move(either_grammar.release_right());
+    auto scanner = sigil::DfaTableScannerDriver::create(grammar.dfa());
+    scanner.initialize("<string>", "abc");
+    expect_eq(scanner.next().type, 1);
+    expect_eq(scanner.next().type, 42);
+    expect_eq(scanner.next().type, 55);
+    expect_eq(scanner.next().type, (s32)sigil::SpecialTokenType::Eof);
+}
+
 void sigil_tests()
 {
     regex_parser_tests();
     dfa_simulation_tests_calculator();
     dfa_simulation_tests_conflict();
     scanner_detect_eof_instead_of_error();
+    user_controlled_token_values();
 }
 
 int main()
