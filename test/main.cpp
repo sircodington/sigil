@@ -7,8 +7,10 @@
 #include <core/Formatting.h>
 
 #include <sigil/DfaSimulation.h>
+#include <sigil/DfaTableScannerDriver.h>
 #include <sigil/RegExp.h>
 #include <sigil/RegexParser.h>
+#include <sigil/ScannerDriver.h>
 
 #define expect_eq(actual, expect)                  \
     do {                                           \
@@ -167,11 +169,58 @@ static void dfa_simulation_tests_conflict()
         simulate(grammar, "Test_3"), SimulationResult::accept("Identifier"));
 }
 
+static void scanner_detect_eof_instead_of_error()
+{
+    enum class TokenType : int8_t
+    {
+        Eof = int8_t(sigil::ScannerDriver::SpecialTokenType::Eof),
+        Error = int8_t(sigil::ScannerDriver::SpecialTokenType::Error),
+        Word,
+        QMark,
+    };
+
+    auto show = [](int type) -> StringView {
+        switch (TokenType(type)) {
+            case TokenType::Eof: return "Eof"sv;
+            case TokenType::Error: return "Error"sv;
+            case TokenType::Word: return "Word"sv;
+            case TokenType::QMark: return "QMark"sv;
+        }
+        assert(false and "Unreachable");
+        return {};
+    };
+
+    {
+        sigil::Specification specification;
+        specification.add_regex_token("Word", "[-a-zA-Z/]+");
+        specification.add_literal_token("QMark", "?");
+        auto either_grammar = sigil::Grammar::compile(specification);
+        auto grammar = std::move(either_grammar.release_right());
+        auto scanner = sigil::DfaTableScannerDriver::create(grammar.dfa());
+        scanner.initialize("<string>", "hello?");
+        expect_eq(show(scanner.next().type), "Word"sv);
+        expect_eq(show(scanner.next().type), "QMark"sv);
+        expect_eq(show(scanner.next().type), "Eof"sv);
+    }
+
+    {
+        sigil::Specification specification;
+        specification.add_regex_token("Word", "[-a-zA-Z/]+");
+        auto either_grammar = sigil::Grammar::compile(specification);
+        auto grammar = std::move(either_grammar.release_right());
+        auto scanner = sigil::DfaTableScannerDriver::create(grammar.dfa());
+        scanner.initialize("<string>", "hello?");
+        expect_eq(show(scanner.next().type), "Word"sv);
+        expect_eq(show(scanner.next().type), "Error"sv);
+    }
+}
+
 void sigil_tests()
 {
     regex_parser_tests();
     dfa_simulation_tests_calculator();
     dfa_simulation_tests_conflict();
+    scanner_detect_eof_instead_of_error();
 }
 
 int main()

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021, Jan Sladek <keddelzz@web.de>
+// Copyright (c) 2022, Jan Sladek <keddelzz@web.de>
 //
 // SPDX-License-Identifier: BSD-2-Clause
 //
@@ -105,7 +105,7 @@ void ScannerDriver::get_next_token()
         m_has_next_token = true;
         m_next_token = token;
     } else {
-        if (is_error_state(current.state) and current.offset < m_input.size()) {
+        if (is_error_state(state)) {
             Token error_token {
                 s32(SpecialTokenType::Error),
                 {},
