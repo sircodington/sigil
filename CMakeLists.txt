@@ -9,6 +9,7 @@ set(${PROJECT_NAME}_HEADERS
     include/sigil/DfaSimulation.h
     include/sigil/DfaTableScannerDriver.h
     include/sigil/FilePosition.h
+    include/sigil/FileRange.h
     include/sigil/Grammar.h
     include/sigil/Nfa.h
     include/sigil/RegExp.h

@@ -119,7 +119,7 @@ void ScannerDriver::get_next_token()
     }
 }
 
-ScannerDriver::FileRange ScannerDriver::accepting_range() const
+FileRange ScannerDriver::accepting_range() const
 {
     return {
         m_file_path,
