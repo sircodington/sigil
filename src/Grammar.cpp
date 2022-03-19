@@ -376,6 +376,17 @@ Either<StringView, Grammar> sigil::Grammar::compile(
 
     create_dfa(grammar, nfas);
 
+    {
+        auto &dfa = grammar.dfa();
+        for (auto state : dfa.states()) {
+            if (state->is_accepting()) {
+                assert(state->token_index >= 0);
+                auto &token = specification.tokens()[state->token_index];
+                state->token_type = token.token_type;
+            }
+        }
+    }
+
     return Result::right(std::move(grammar));
 }
 

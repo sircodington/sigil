@@ -15,8 +15,10 @@ namespace sigil {
 class Specification
 {
 public:
-    void add_literal_token(StringView token_name, StringView exact_string);
-    void add_regex_token(StringView token_name, StringView regex);
+    void add_literal_token(
+        s32 token_type, StringView token_name, StringView exact_string);
+    void add_regex_token(
+        s32 token_type, StringView token_name, StringView regex);
 
     struct TokenSpec
     {
@@ -28,6 +30,7 @@ public:
         };
 
         Type type { Type::Invalid };
+        s32 token_type { -3 }; // @TODO: Add a special token type for -3
         StringView name {};
         StringView pattern {};
     };

@@ -11,20 +11,23 @@
 namespace sigil {
 
 void Specification::add_literal_token(
-    StringView token_name, StringView exact_string)
+    s32 token_type, StringView token_name, StringView exact_string)
 {
     TokenSpec token {
         TokenSpec::Type::Literal,
+        token_type,
         token_name,
         exact_string,
     };
     m_tokens.add(token);
 }
 
-void Specification::add_regex_token(StringView token_name, StringView regex)
+void Specification::add_regex_token(
+    s32 token_type, StringView token_name, StringView regex)
 {
     TokenSpec token {
         TokenSpec::Type::Regex,
+        token_type,
         token_name,
         regex,
     };
