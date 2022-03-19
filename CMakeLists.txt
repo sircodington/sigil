@@ -15,6 +15,7 @@ set(${PROJECT_NAME}_HEADERS
     include/sigil/RegExp.h
     include/sigil/RegexParser.h
     include/sigil/ScannerDriver.h
+    include/sigil/SpecialTokenType.h
     include/sigil/Specification.h
     include/sigil/StaticTable.h
     include/sigil/StaticTableScannerDriver.h

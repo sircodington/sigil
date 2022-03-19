@@ -10,6 +10,7 @@
 #include <core/StringView.h>
 
 #include <sigil/FileRange.h>
+#include <sigil/SpecialTokenType.h>
 #include <sigil/Types.h>
 
 namespace sigil {
@@ -23,12 +24,7 @@ public:
 
     virtual void initialize(StringView file_path, StringView input);
 
-    // @TODO: Extract those types and structs
-    enum class SpecialTokenType : s32
-    {
-        Eof = -2,
-        Error = -1,
-    };
+    // @TODO: Extract those structs
     struct Token
     {
         s32 type { s32(SpecialTokenType::Error) };
