@@ -9,6 +9,7 @@
 #include <core/RingBuffer.h>
 #include <core/StringView.h>
 
+#include <sigil/FilePosition.h>
 #include <sigil/Types.h>
 
 namespace sigil {
@@ -23,11 +24,6 @@ public:
     virtual void initialize(StringView file_path, StringView input);
 
     // @TODO: Extract those structs
-    struct FilePosition
-    {
-        s64 line { -1 };
-        s64 column { -1 };
-    };
     struct FileRange
     {
         StringView file_path;
