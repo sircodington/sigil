@@ -67,7 +67,7 @@ bool DfaScannerDriver::is_error_state(State state) const
 TokenType DfaScannerDriver::accepting_token(State state) const
 {
     assert(is_accepting_state(state));
-    return state_by_id(state)->token_index;
+    return state_by_id(state)->token_type;
 }
 
 const dfa::State *DfaScannerDriver::state_by_id(State id) const

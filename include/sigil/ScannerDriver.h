@@ -9,6 +9,9 @@
 #include <core/RingBuffer.h>
 #include <core/StringView.h>
 
+#include <sigil/FileRange.h>
+#include <sigil/SpecialTokenType.h>
+#include <sigil/Token.h>
 #include <sigil/Types.h>
 
 namespace sigil {
@@ -21,30 +24,6 @@ public:
     virtual ~ScannerDriver() = default;
 
     virtual void initialize(StringView file_path, StringView input);
-
-    // @TODO: Extract those structs
-    struct FilePosition
-    {
-        s64 line { -1 };
-        s64 column { -1 };
-    };
-    struct FileRange
-    {
-        StringView file_path;
-        FilePosition first;
-        FilePosition end;  // exclusive
-    };
-    enum class SpecialTokenType : s32
-    {
-        Eof = -2,
-        Error = -1,
-    };
-    struct Token
-    {
-        s32 type { s32(SpecialTokenType::Error) };
-        StringView lexeme;
-        FileRange range;
-    };
 
     inline bool can_lookahead(Index offset = 0)
     {

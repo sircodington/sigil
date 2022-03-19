@@ -33,7 +33,8 @@ struct State
     const u64 id { 0 };
     bool start { false };
     Type type { Type::Invalid };
-    s32 token_index { -1 };
+    s32 token_index { -1 };  // Index into Specification::m_tokens
+    s32 token_type { -3 };   // @TODO: SpecialTokenType, value given by user
 };
 
 struct Arc
@@ -67,6 +68,7 @@ public:
     {
         return m_states;
     }
+    [[nodiscard]] constexpr List<State *> &states() { return m_states; }
     [[nodiscard]] constexpr const List<Arc *> &arcs() const { return m_arcs; }
 
     [[nodiscard]] const dfa::State *start_state() const;

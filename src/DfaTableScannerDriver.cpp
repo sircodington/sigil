@@ -46,7 +46,7 @@ DfaTableScannerDriver DfaTableScannerDriver::create(const dfa::Automaton &dfa)
     }
     for (const auto state : dfa.states()) {
         if (state->is_accepting())
-            accepting[state->id] = state->token_index;
+            accepting[state->id] = state->token_type;
     }
 
     StaticTable static_table(

@@ -8,14 +8,18 @@ set(${PROJECT_NAME}_HEADERS
     include/sigil/DfaScannerDriver.h
     include/sigil/DfaSimulation.h
     include/sigil/DfaTableScannerDriver.h
+    include/sigil/FilePosition.h
+    include/sigil/FileRange.h
     include/sigil/Grammar.h
     include/sigil/Nfa.h
     include/sigil/RegExp.h
     include/sigil/RegexParser.h
     include/sigil/ScannerDriver.h
+    include/sigil/SpecialTokenType.h
     include/sigil/Specification.h
     include/sigil/StaticTable.h
     include/sigil/StaticTableScannerDriver.h
+    include/sigil/Token.h
     include/sigil/Types.h
 )
 

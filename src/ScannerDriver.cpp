@@ -34,7 +34,7 @@ bool ScannerDriver::has_next()
     return m_has_next_token or not m_eof_token_returned;
 }
 
-ScannerDriver::Token ScannerDriver::next()
+Token ScannerDriver::next()
 {
     assert(has_next());
 
@@ -119,7 +119,7 @@ void ScannerDriver::get_next_token()
     }
 }
 
-ScannerDriver::FileRange ScannerDriver::accepting_range() const
+FileRange ScannerDriver::accepting_range() const
 {
     return {
         m_file_path,
