@@ -11,6 +11,7 @@
 
 #include <sigil/FileRange.h>
 #include <sigil/SpecialTokenType.h>
+#include <sigil/Token.h>
 #include <sigil/Types.h>
 
 namespace sigil {
@@ -23,14 +24,6 @@ public:
     virtual ~ScannerDriver() = default;
 
     virtual void initialize(StringView file_path, StringView input);
-
-    // @TODO: Extract those structs
-    struct Token
-    {
-        s32 type { s32(SpecialTokenType::Error) };
-        StringView lexeme;
-        FileRange range;
-    };
 
     inline bool can_lookahead(Index offset = 0)
     {

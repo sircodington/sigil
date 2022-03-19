@@ -19,6 +19,7 @@ set(${PROJECT_NAME}_HEADERS
     include/sigil/Specification.h
     include/sigil/StaticTable.h
     include/sigil/StaticTableScannerDriver.h
+    include/sigil/Token.h
     include/sigil/Types.h
 )
 
