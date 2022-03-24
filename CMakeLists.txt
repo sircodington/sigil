@@ -29,6 +29,7 @@ set(${PROJECT_NAME}_SOURCES
     src/DfaScannerDriver.cpp
     src/DfaSimulation.cpp
     src/DfaTableScannerDriver.cpp
+    src/FileRange.cpp
     src/Grammar.cpp
     src/Nfa.cpp
     src/RegExp.cpp
