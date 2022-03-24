@@ -17,6 +17,8 @@ struct FileRange
     StringView file_path;
     FilePosition first;
     FilePosition end;  // exclusive
+
+    static FileRange merge(FileRange, FileRange);
 };
 
 }  // namespace sigil
