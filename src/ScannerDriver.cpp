@@ -21,6 +21,8 @@ void ScannerDriver::initialize(StringView file_path, StringView input)
     m_scan_error = false;
     m_eof_token_returned = false;
     m_next_token = Token();
+
+    while (not m_lookahead.empty()) m_lookahead.consume();
 }
 
 bool ScannerDriver::has_next()
