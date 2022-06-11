@@ -58,29 +58,26 @@ inline static bool between(char min, char c, char max)
 {
     return min <= c and c <= max;
 }
+inline static bool is_meta_character(char c)
+{
+    switch (c) {
+        case '(':
+        case ')':
+        case '[':
+        case ']':
+        case '{':
+        case '}':
+        case '?':
+        case '*':
+        case '+':
+        case '|':
+        case '.': return true;
+        default: return false;
+    }
+}
 inline static bool can_be_atom(char c)
 {
-    if (between('\0', c, '\u001F'))
-        return false;
-    if (between(' ', c, '\''))
-        return true;
-    if (between('(', c, '+'))
-        return false;
-    if (between('-', c, 'Z'))
-        return true;
-    if (c == '[')
-        return false;
-    if (c == '\\')
-        return true;
-    if (c == ']')
-        return false;
-    if (between('^', c, '{'))
-        return true;
-    if (c == '|')
-        return false;
-    if (between('}', c, '~'))
-        return true;
-    return false;
+    return not is_meta_character(c);
 }
 inline static bool can_be_primary_expression(char c)
 {
@@ -232,6 +229,9 @@ constexpr static auto ErrorAtom = std::numeric_limits<uint64_t>::max();
 
 uint64_t RegexParser::parse_atom()
 {
+    if (not can_be_atom(peek())) {
+        debug_log("");
+    }
     assert(can_be_atom(peek()));
     u8 c = advance();
     if (c == '\\') {
