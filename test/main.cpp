@@ -1,33 +1,16 @@
 //
-// Copyright (c) 2021, Jan Sladek <keddelzz@web.de>
+// Copyright (c) 2021-2022, Jan Sladek <keddelzz@web.de>
 //
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
 #include <core/Formatting.h>
+#include <core/Test.h>
 
 #include <sigil/DfaSimulation.h>
 #include <sigil/DfaTableScannerDriver.h>
 #include <sigil/RegExp.h>
 #include <sigil/RegexParser.h>
-
-#define expect_eq(actual, expect)                  \
-    do {                                           \
-        const auto x = (actual);                   \
-        const auto y = (expect);                   \
-        if (x != y) {                              \
-            debug_log(                             \
-                "Expected equality of values\n  ", \
-                #actual,                           \
-                "\n  ",                            \
-                x,                                 \
-                "\n and\n  ",                      \
-                #expect,                           \
-                "\n  ",                            \
-                y,                                 \
-                "\n\n");                           \
-        }                                          \
-    } while (0)
 
 String parse_regex(const StringView &regex_pattern)
 {
