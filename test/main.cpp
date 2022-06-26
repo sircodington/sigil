@@ -10,8 +10,6 @@
 #include <sigil/DfaTableScannerDriver.h>
 #include <sigil/RegExp.h>
 #include <sigil/RegexParser.h>
-#include <sigil/ScannerDriver.h>
-#include <sigil/SpecialTokenType.h>
 
 #define expect_eq(actual, expect)                  \
     do {                                           \
