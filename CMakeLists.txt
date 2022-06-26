@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.20)
 project(sigil LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 
+add_compile_options(-Wno-literal-suffix)
+add_compile_options(-Wswitch)
+
 set(${PROJECT_NAME}_HEADERS
     include/sigil/CharSet.h
     include/sigil/Dfa.h
