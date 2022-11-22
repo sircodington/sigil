@@ -30,9 +30,9 @@ public:
         };
 
         Type type { Type::Invalid };
-        s32 token_type { -3 }; // @TODO: Add a special token type for -3
-        StringView name {};
-        StringView pattern {};
+        s32 token_type { -3 };  // @TODO: Add a special token type for -3
+        StringView name;
+        StringView pattern;
     };
 
     [[nodiscard]] const List<TokenSpec> &tokens() const { return m_tokens; }
