@@ -128,7 +128,6 @@ static Either<StringView, nfa::Automaton> create_nfa(
             // @TODO: Introduce StringView::begin and StringView::end
             for (Index i = 0; i < token.pattern.size(); ++i) {
                 const auto c = token.pattern[i];
-
                 auto next = automaton.create_state();
                 automaton.create_character_arc(curr, next, CharSet(c));
                 curr = next;
@@ -149,6 +148,15 @@ static Either<StringView, nfa::Automaton> create_nfa(
 
             auto regex = either_regex.right();
             create_regex_nfa(automaton, regex);
+            return Result::right(std::move(automaton));
+        }
+
+        case Specification::TokenSpec::Type::Nfa: {
+            sigil::nfa::Automaton automaton(arena);
+            assert(token.build);
+            token.build(automaton);
+            if (automaton.arcs().is_empty() and automaton.states().is_empty())
+                return Result::left("User code yielded an invalid automaton"sv);
             return Result::right(std::move(automaton));
         }
 
