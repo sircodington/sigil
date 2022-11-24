@@ -169,6 +169,14 @@ bool RegexParser::unescape(
         return false;
 
     switch (view[0]) {
+        case '|':
+            result = '|';
+            advance = 1;
+            return true;
+        case '.':
+            result = '.';
+            advance = 1;
+            return true;
         case '\\':
             result = '\\';
             advance = 1;
