@@ -173,6 +173,10 @@ bool RegexParser::unescape(
             result = '|';
             advance = 1;
             return true;
+        case '.':
+            result = '.';
+            advance = 1;
+            return true;
         case '\\':
             result = '\\';
             advance = 1;
