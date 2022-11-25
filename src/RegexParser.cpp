@@ -221,7 +221,10 @@ inline static bool can_be_top_level_atom(u8 c)
         case '&':
         case '!':
         case '#':
-        case '\'': return true;
+        case '\'':
+        case '\n':
+        case '\r':
+        case '\t': return true;
         default: return false;
     }
 }
@@ -263,6 +266,18 @@ CharSet RegexParser::parse_top_level_chars()
     if (peek() == '\'') {
         advance();  // '\''
         return CharSet('\'');
+    }
+    if (peek() == '\n') {
+        advance();  // '\n'
+        return CharSet('\n');
+    }
+    if (peek() == '\r') {
+        advance();  // '\r'
+        return CharSet('\r');
+    }
+    if (peek() == '\t') {
+        advance();  // '\t'
+        return CharSet('\t');
     }
 
     if (peek() == '\\') {
@@ -344,7 +359,10 @@ inline static bool can_be_class_atom(u8 c)
         case '+':
         case '!':
         case '#':
-        case '\'': return true;
+        case '\'':
+        case '\n':
+        case '\r':
+        case '\t': return true;
         default: return false;
     }
 }
@@ -402,6 +420,18 @@ CharSet RegexParser::parse_class_chars()
         if (peek() == '\'') {
             advance();  // '\''
             return Result('\'');
+        }
+        if (peek() == '\n') {
+            advance();  // '\n'
+            return Result('\n');
+        }
+        if (peek() == '\r') {
+            advance();  // '\r'
+            return Result('\r');
+        }
+        if (peek() == '\t') {
+            advance();  // '\t'
+            return Result('\t');
         }
 
         if (peek() == '\\') {
