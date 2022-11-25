@@ -7,6 +7,7 @@
 #include <sigil/CharSet.h>
 
 #include <algorithm>
+
 #include <core/Formatting.h>
 
 #include <sigil/RegexParser.h>
