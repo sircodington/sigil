@@ -77,17 +77,34 @@ CharSet CharSet::operator|(CharSet other) const
         *this, other, [](bool a, bool b) { return a or b; });
 }
 
+CharSet &CharSet::operator|=(CharSet other)
+{
+    *this = *this | other;
+    return *this;
+}
+
 CharSet CharSet::operator&(CharSet other) const
 {
     return binary_operation(
         *this, other, [](bool a, bool b) { return a and b; });
 }
 
+CharSet &CharSet::operator&=(CharSet other)
+{
+    *this = *this & other;
+    return *this;
+}
 
 CharSet CharSet::operator/(CharSet other) const
 {
     return binary_operation(
         *this, other, [](bool a, bool b) { return a and not b; });
+}
+
+CharSet &CharSet::operator/=(CharSet other)
+{
+    *this = *this / other;
+    return *this;
 }
 
 }  // namespace sigil

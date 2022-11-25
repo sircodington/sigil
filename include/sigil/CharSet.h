@@ -42,8 +42,11 @@ public:
 
     CharSet operator~() const;
     CharSet operator|(CharSet other) const;
+    CharSet &operator|=(CharSet other);
     CharSet operator&(CharSet other) const;
+    CharSet &operator&=(CharSet other);
     CharSet operator/(CharSet other) const;
+    CharSet &operator/=(CharSet other);
 
 private:
     constexpr static auto Size = std::numeric_limits<u8>::max() + 1;
