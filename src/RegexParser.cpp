@@ -135,28 +135,6 @@ RegExp *RegexParser::parse_postfix()
     return result;
 }
 
-String RegexParser::escape(u8 c)
-{
-    switch (c) {
-        case '\\': return StringView("\\\\");
-        case '\t': return StringView("\\t");
-        case '\r': return StringView("\\r");
-        case '\n': return StringView("\\n");
-        default:
-            if (between(' ', c, '~')) {
-                return StringView(reinterpret_cast<char *>(&c), 1);
-            } else {
-                char buffer[12] { 0 };
-                buffer[0] = '\\';
-                buffer[1] = 'u';
-                auto count =
-                    snprintf(buffer + 2, sizeof(buffer) - 2, "%X", (c & 0xFF));
-                assert(count >= 0 and "snprintf failed");
-                return StringView(buffer, count + 2);
-            }
-    }
-}
-
 inline static bool can_be_atom(u8 c)
 {
     if (c == '(' or c == '[')

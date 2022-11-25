@@ -24,8 +24,6 @@ public:
     void initialize(StringView input);
     Either<StringView, RegExp *> parse();
 
-    static String escape(u8 c);
-
 private:
     template<typename T, typename... Args>
     inline RegExp *create_reg_exp(Args &&...args)
