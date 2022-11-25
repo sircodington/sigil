@@ -37,6 +37,9 @@ public:
     void set(u8 first, u8 last, bool);
     void negate();
 
+    bool operator==(const CharSet &other) const;
+    bool operator!=(const CharSet &other) const { return not(*this == other); }
+
     CharSet operator~() const;
     CharSet operator|(CharSet other) const;
     CharSet operator&(CharSet other) const;

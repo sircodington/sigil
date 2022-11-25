@@ -45,6 +45,14 @@ void CharSet::negate()
         set(i, not contains(i));
 }
 
+bool CharSet::operator==(const CharSet &other) const
+{
+    for (auto i = sigil::CharSet::first; i <= sigil::CharSet::last; ++i)
+        if (contains(i) != other.contains(i))
+            return false;
+    return true;
+}
+
 CharSet CharSet::operator~() const
 {
     CharSet result = *this;

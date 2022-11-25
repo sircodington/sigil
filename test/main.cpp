@@ -28,6 +28,10 @@ static void char_set_tests()
         }
     }
 
+    assert(sigil::CharSet() == sigil::CharSet());
+    assert(sigil::CharSet('x') == sigil::CharSet('x'));
+    assert(sigil::CharSet('0', '9') == sigil::CharSet('0', '9'));
+
     const auto set = [](u8 first, u8 last) {
         return sigil::CharSet(first, last);
     };
