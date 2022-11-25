@@ -217,7 +217,8 @@ inline static bool can_be_top_level_atom(u8 c)
         case '_':
         case '^':
         case '$':
-        case '%': return true;
+        case '%':
+        case '&': return true;
         default: return false;
     }
 }
@@ -244,6 +245,10 @@ CharSet RegexParser::parse_top_level_chars()
         advance();  // '%'
         return CharSet('%');
     }
+    if (peek() == '&') {
+        advance();  // '&'
+        return CharSet('&');
+    }
 
     if (peek() == '\\') {
         advance();  // '\\'
@@ -266,6 +271,7 @@ CharSet RegexParser::parse_top_level_chars()
             case '^': return CharSet('^');
             case '$': return CharSet('$');
             case '%': return CharSet('%');
+            case '&': return CharSet('&');
             case 'd': return Digit;
             case 'D': return ~Digit;
             case 'w': return Word;
@@ -314,7 +320,8 @@ inline static bool can_be_class_atom(u8 c)
         case '_':
         case '^':
         case '$':
-        case '%': return true;
+        case '%':
+        case '&': return true;
         default: return false;
     }
 }
@@ -353,6 +360,10 @@ CharSet RegexParser::parse_class_chars()
             advance();  // '%'
             return Result('%');
         }
+        if (peek() == '&') {
+            advance();  // '&'
+            return Result('&');
+        }
 
         if (peek() == '\\') {
             advance();  // '\\'
@@ -370,6 +381,7 @@ CharSet RegexParser::parse_class_chars()
                 case '^': return Result('^');
                 case '$': return Result('$');
                 case '%': return Result('%');
+                case '&': return Result('&');
                 case 'd':
                 case 'D':
                 case 'w':
