@@ -7,10 +7,38 @@
 #include <core/Formatting.h>
 #include <core/Test.h>
 
+#include <sigil/CharSet.h>
 #include <sigil/DfaSimulation.h>
 #include <sigil/DfaTableScannerDriver.h>
 #include <sigil/RegExp.h>
 #include <sigil/RegexParser.h>
+
+static void char_set_tests()
+{
+    {
+        sigil::CharSet empty;
+        assert(empty.is_empty());
+    }
+
+    {
+        auto complete = ~sigil::CharSet();
+        assert(complete.non_empty());
+        for (auto i = sigil::CharSet::first; i <= sigil::CharSet::last; ++i) {
+            assert(complete.contains(i));
+        }
+    }
+
+    assert(sigil::CharSet() == sigil::CharSet());
+    assert(sigil::CharSet('x') == sigil::CharSet('x'));
+    assert(sigil::CharSet('0', '9') == sigil::CharSet('0', '9'));
+
+    const auto set = [](u8 first, u8 last) {
+        return sigil::CharSet(first, last);
+    };
+    assert((set('a', 's') | set('k', 'z')) == set('a', 'z'));
+    assert((set('a', 's') & set('k', 'z')) == set('k', 's'));
+    assert((set('a', 's') / set('k', 'z')) == set('a', 'j'));
+}
 
 String parse_regex(const StringView &regex_pattern)
 {
@@ -72,6 +100,34 @@ static void regex_parser_tests()
 
     expect_eq(parse_regex("[-a]"), "Atom('-', 'a')");
     expect_eq(parse_regex("[^\\u00-/:-\\uFF]"), "Atom('0' - '9')");
+
+    expect_eq(parse_regex("\\d"), "Atom('0' - '9')");
+    // @FIXME: Replace be real error, once we properly propagate failure
+    expect_eq(parse_regex("[\\d]"), "Parse error: Parse error");
+
+    expect_eq(parse_regex("\\D"), "Atom('\\u0' - '/', ':' - '\\uFF')");
+    // @FIXME: Replace be real error, once we properly propagate failure
+    expect_eq(parse_regex("[\\D]"), "Parse error: Parse error");
+
+    expect_eq(parse_regex("\\w"), "Atom('0' - '9', 'A' - 'Z', '_', 'a' - 'z')");
+    // @FIXME: Replace be real error, once we properly propagate failure
+    expect_eq(parse_regex("[\\w]"), "Parse error: Parse error");
+
+    expect_eq(
+        parse_regex("\\W"),
+        "Atom('\\u0' - '/', ':' - '@', '[' - '^', '`', '{' - '\\uFF')");
+    // @FIXME: Replace be real error, once we properly propagate failure
+    expect_eq(parse_regex("[\\W]"), "Parse error: Parse error");
+
+    expect_eq(parse_regex("\\s"), "Atom('\\t' - '\\r', ' ')");
+    // @FIXME: Replace be real error, once we properly propagate failure
+    expect_eq(parse_regex("[\\s]"), "Parse error: Parse error");
+
+    expect_eq(
+        parse_regex("\\S"),
+        "Atom('\\u0' - '\\u8', '\\uE' - '\\u1F', '!' - '\\uFF')");
+    // @FIXME: Replace be real error, once we properly propagate failure
+    expect_eq(parse_regex("[\\S]"), "Parse error: Parse error");
 }
 
 static void dfa_simulation_tests_calculator()
@@ -240,6 +296,7 @@ static void user_controlled_token_values()
 
 void sigil_tests()
 {
+    char_set_tests();
     regex_parser_tests();
     dfa_simulation_tests_calculator();
     dfa_simulation_tests_conflict();

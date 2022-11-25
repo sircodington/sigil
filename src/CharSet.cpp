@@ -7,6 +7,7 @@
 #include <sigil/CharSet.h>
 
 #include <algorithm>
+
 #include <core/Formatting.h>
 
 #include <sigil/RegexParser.h>
@@ -44,9 +45,94 @@ void CharSet::negate()
         set(i, not contains(i));
 }
 
+bool CharSet::operator==(const CharSet &other) const
+{
+    for (auto i = sigil::CharSet::first; i <= sigil::CharSet::last; ++i)
+        if (contains(i) != other.contains(i))
+            return false;
+    return true;
+}
+
+CharSet CharSet::operator~() const
+{
+    CharSet result = *this;
+    result.negate();
+    return result;
+}
+
+template<typename BiPredicate>
+inline static CharSet binary_operation(
+    CharSet a, CharSet b, BiPredicate predicate)
+{
+    CharSet result;
+    for (auto i = CharSet::first; i <= CharSet::last; ++i) {
+        result.set(i, predicate(a.contains(i), b.contains(i)));
+    }
+    return result;
+}
+
+CharSet CharSet::operator|(CharSet other) const
+{
+    return binary_operation(
+        *this, other, [](bool a, bool b) { return a or b; });
+}
+
+CharSet &CharSet::operator|=(CharSet other)
+{
+    *this = *this | other;
+    return *this;
+}
+
+CharSet CharSet::operator&(CharSet other) const
+{
+    return binary_operation(
+        *this, other, [](bool a, bool b) { return a and b; });
+}
+
+CharSet &CharSet::operator&=(CharSet other)
+{
+    *this = *this & other;
+    return *this;
+}
+
+CharSet CharSet::operator/(CharSet other) const
+{
+    return binary_operation(
+        *this, other, [](bool a, bool b) { return a and not b; });
+}
+
+CharSet &CharSet::operator/=(CharSet other)
+{
+    *this = *this / other;
+    return *this;
+}
+
 }  // namespace sigil
 
 namespace core {
+
+static void escape_into(StringBuilder &b, u8 c)
+{
+    switch (c) {
+        case '\\': Formatting::format_into(b, R"(\\)"sv); break;
+        case '\t': Formatting::format_into(b, R"(\t)"sv); break;
+        case '\r': Formatting::format_into(b, R"(\r)"sv); break;
+        case '\n': Formatting::format_into(b, R"(\n)"sv); break;
+        default: {
+            if (' ' <= c and c <= '~') {
+                Formatting::format_into(b, char(c));
+            } else {
+                char buffer[12] { 0 };
+                buffer[0] = '\\';
+                buffer[1] = 'u';
+                auto count =
+                    snprintf(buffer + 2, sizeof(buffer) - 2, "%X", (c & 0xFF));
+                assert(count >= 0 and "snprintf failed");
+                Formatting::format_into(b, StringView(buffer, count + 2));
+            }
+        }
+    }
+}
 
 void Formatter<sigil::CharSet>::format(
     StringBuilder &b, const sigil::CharSet &char_set)
@@ -66,11 +152,16 @@ void Formatter<sigil::CharSet>::format(
             Formatting::format_into(b, ", ");
         first = false;
 
-        Formatting::format_into(
-            b, "'", sigil::RegexParser::escape(range.first), "'");
+        const auto emit_char = [&](u8 c) {
+            Formatting::format_into(b, "'");
+            escape_into(b, c);
+            Formatting::format_into(b, "'");
+        };
+
+        emit_char(range.first);
         if (range.first != range.last) {
-            Formatting::format_into(
-                b, " - '", sigil::RegexParser::escape(range.last), "'");
+            Formatting::format_into(b, " - ");
+            emit_char(range.last);
         }
     };
 

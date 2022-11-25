@@ -1,12 +1,11 @@
 //
-// Copyright (c) 2021, Jan Sladek <keddelzz@web.de>
+// Copyright (c) 2021-2022, Jan Sladek <keddelzz@web.de>
 //
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
 #include <sigil/RegexParser.h>
 
-#include <algorithm>
 #include <cctype>
 
 #include <core/Formatting.h>
@@ -54,41 +53,15 @@ Either<StringView, RegExp *> sigil::RegexParser::parse()
     return Result::left("Parse error");
 }
 
-inline static bool between(char min, char c, char max)
+inline static bool between(u8 min, u8 c, u8 max)
 {
     return min <= c and c <= max;
 }
-inline static bool is_meta_character(char c)
-{
-    switch (c) {
-        case '(':
-        case ')':
-        case '[':
-        case ']':
-        case '{':
-        case '}':
-        case '?':
-        case '*':
-        case '+':
-        case '|':
-        case '.': return true;
-        default: return false;
-    }
-}
-inline static bool can_be_atom(char c)
-{
-    return not is_meta_character(c);
-}
-inline static bool can_be_primary_expression(char c)
-{
-    if (can_be_atom(c))
-        return true;
-    if (c == '(')
-        return true;
-    if (c == '[')
-        return true;
-    return false;
-}
+
+inline static bool can_be_class_atom(u8 c);
+inline static bool can_be_top_level_atom(u8 c);
+inline static bool can_be_atom(u8 c);
+
 inline static bool unhex(u8 &result, char c)
 {
     if (not(between('a', c, 'f') or between('A', c, 'F') or
@@ -108,7 +81,7 @@ inline static bool unhex(u8 &result, char c)
 RegExp *RegexParser::parse_alternative()
 {
     auto result = parse_concatenation();
-    if (result == nullptr)
+    if (not result)
         return nullptr;
 
     while (can_peek() and peek() == '|') {
@@ -126,10 +99,10 @@ RegExp *RegexParser::parse_alternative()
 RegExp *RegexParser::parse_concatenation()
 {
     auto result = parse_postfix();
-    if (result == nullptr)
+    if (not result)
         return nullptr;
 
-    while (can_peek() and can_be_primary_expression(peek())) {
+    while (can_peek() and can_be_atom(peek())) {
         auto exp = parse_postfix();
         if (exp == nullptr)
             return nullptr;
@@ -142,8 +115,8 @@ RegExp *RegexParser::parse_concatenation()
 
 RegExp *RegexParser::parse_postfix()
 {
-    auto result = parse_primary();
-    if (result == nullptr)
+    auto result = parse_atom();
+    if (not result)
         return nullptr;
 
     const auto is_postfix_operator = [](char c) {
@@ -162,158 +135,261 @@ RegExp *RegexParser::parse_postfix()
     return result;
 }
 
-bool RegexParser::unescape(
-    u8 &result, u8 &advance, const core::StringView &view)
+inline static bool can_be_atom(u8 c)
 {
-    if (view.is_empty())
-        return false;
+    if (c == '(' or c == '[')
+        return true;
+    return can_be_top_level_atom(c);
+}
 
-    switch (view[0]) {
-        case '|':
-            result = '|';
-            advance = 1;
-            return true;
+RegExp *RegexParser::parse_atom()
+{
+    assert(can_be_atom(peek()));
+    if (peek() == '(')
+        return parse_nested_atom();
+    if (peek() == '[')
+        return parse_class_atom();
+    return parse_top_level_atom();
+}
+
+RegExp *RegexParser::parse_nested_atom()
+{
+    assert(peek() == '(');
+    advance();  // '('
+    auto exp = parse_alternative();
+    if (peek() != ')') {
+        debug_log("Expected `)`, but got `", peek(), "`\n");
+        return nullptr;
+    }
+    advance();
+    return exp;
+}
+
+RegExp *RegexParser::parse_class_atom()
+{
+    assert(peek() == '[');
+    advance();  // '['
+
+    const auto negate = peek() == '^';
+    if (negate)
+        advance();
+
+    CharSet char_set;
+    while (peek() != ']') {
+        auto curr = parse_class_chars();
+        if (curr.is_empty())
+            return nullptr;
+        char_set |= curr;
+    }
+    advance();  // ']'
+
+    if (negate)
+        char_set.negate();
+
+    return create_reg_exp<Atom>(std::move(char_set));
+}
+
+RegExp *RegexParser::parse_top_level_atom()
+{
+    assert(can_be_top_level_atom(peek()));
+    auto char_set = parse_top_level_chars();
+    if (char_set.is_empty())
+        return nullptr;
+    return create_reg_exp<Atom>(std::move(char_set));
+}
+
+inline static bool can_be_top_level_atom(u8 c)
+{
+    if (between('a', c, 'z'))
+        return true;
+    if (between('A', c, 'Z'))
+        return true;
+    if (between('0', c, '9'))
+        return true;
+
+    switch (c) {
         case '.':
-            result = '.';
-            advance = 1;
-            return true;
         case '\\':
-            result = '\\';
-            advance = 1;
-            return true;
-        case 't':
-            result = '\t';
-            advance = 1;
-            return true;
-        case 'r':
-            result = '\r';
-            advance = 1;
-            return true;
-        case 'n':
-            result = '\n';
-            advance = 1;
-            return true;
-        case 'u': {
-            if (view.size() < 3)
-                return false;
-
-            u8 d0, d1;
-            if (not unhex(d0, view[1]))
-                return false;
-            if (not unhex(d1, view[2]))
-                return false;
-
-            advance = 3;
-            result = u8(d0 * 16 + d1);
-            return true;
-        }
+        case ' ':
+        case '-':
+        case ':':
+        case '/':
+        case '_': return true;
         default: return false;
     }
 }
 
-String RegexParser::escape(u8 c)
+CharSet RegexParser::parse_top_level_chars()
 {
+    assert(can_be_top_level_atom(peek()));
+
+    if (peek() == '.') {
+        advance();  // '.'
+        return ~CharSet();
+    }
+    if (peek() == '-') {
+        advance();  // '-'
+        return CharSet('-');
+    }
+
+    if (peek() == '\\') {
+        advance();  // '\\'
+        if (not can_peek())
+            return {};
+
+        static CharSet Digit('0', '9');
+        static auto Word =
+            CharSet('a', 'z') | CharSet('A', 'Z') | Digit | CharSet('_');
+        static auto WhiteSpace = CharSet('\r') | CharSet('\n') | CharSet('\t') |
+                                 CharSet('\f') | CharSet('\v') | CharSet(' ');
+
+        switch (advance()) {
+            case '|': return CharSet('|');
+            case '.': return CharSet('.');
+            case '\\': return CharSet('\\');
+            case 't': return CharSet('\t');
+            case 'r': return CharSet('\r');
+            case 'n': return CharSet('\n');
+            case 'd': return Digit;
+            case 'D': return ~Digit;
+            case 'w': return Word;
+            case 'W': return ~Word;
+            case 's': return WhiteSpace;
+            case 'S': return ~WhiteSpace;
+            case 'u': {
+                if (not can_peek())
+                    return {};
+                const auto a = advance();
+
+                if (not can_peek())
+                    return {};
+                const auto b = advance();
+
+                u8 d0, d1;
+                if (not unhex(d0, a))
+                    return {};
+                if (not unhex(d1, b))
+                    return {};
+                return CharSet(u8(d0 * 16 + d1));
+            }
+            default: return {};
+        }
+    }
+
+    return CharSet(advance());
+}
+
+inline static bool can_be_class_atom(u8 c)
+{
+    if (between('a', c, 'z'))
+        return true;
+    if (between('A', c, 'Z'))
+        return true;
+    if (between('0', c, '9'))
+        return true;
+
     switch (c) {
-        case '\\': return StringView("\\\\");
-        case '\t': return StringView("\\t");
-        case '\r': return StringView("\\r");
-        case '\n': return StringView("\\n");
-        default:
-            if (between(' ', c, '~')) {
-                return StringView(reinterpret_cast<char *>(&c), 1);
-            } else {
-                char buffer[12] { 0 };
-                buffer[0] = '\\';
-                buffer[1] = 'u';
-                auto count =
-                    snprintf(buffer + 2, sizeof(buffer) - 2, "%X", (c & 0xFF));
-                assert(count >= 0 and "snprintf failed");
-                return StringView(buffer, count + 2);
-            }
+        case '.':
+        case '\\':
+        case ' ':
+        case '-':
+        case ':':
+        case '/':
+        case '_': return true;
+        default: return false;
     }
 }
 
-constexpr static auto ErrorAtom = std::numeric_limits<uint64_t>::max();
-
-uint64_t RegexParser::parse_atom()
+CharSet RegexParser::parse_class_chars()
 {
-    if (not can_be_atom(peek())) {
-        debug_log("");
-    }
-    assert(can_be_atom(peek()));
-    u8 c = advance();
-    if (c == '\\') {
-        const core::StringView peeked(
-            m_input.data() + m_offset,
-            std::min(m_input.size() - Size(m_offset), Size(3)));
-
-        u8 skip = 0;
-        if (not RegexParser::unescape(c, skip, peeked)) {
-            debug_log("Invalid escape sequence\n");
-            return ErrorAtom;
+    struct Result
+    {
+        Result() = default;
+        explicit Result(u8 value)
+            : ok(true)
+            , value(value)
+        {
         }
-        for (u8 i = 0; i < skip; ++i) advance();
-    }
-    return c;
-}
+        bool ok { false };
+        u8 value { 0 };
+    };
 
-RegExp *RegexParser::parse_primary()
-{
-    if (can_be_atom(peek())) {
-        auto atom = parse_atom();
-        if (ErrorAtom == atom)
-            return nullptr;
+    const auto parse_class_char = [this]() -> Result {
+        if (not can_peek() or not can_be_class_atom(peek()))
+            return {};
 
-        CharSet singleton_char_set { u8(atom) };
-        return create_reg_exp<Atom>(std::move(singleton_char_set));
-    }
+        if (peek() == '.') {
+            advance();  // '.'
+            return Result('.');
+        }
 
-    if (peek() == '[') {
-        advance();
+        if (peek() == '\\') {
+            advance();  // '\\'
 
-        const auto negate = peek() == '^';
-        if (negate)
-            advance();
+            if (not can_peek())
+                return {};
 
-        CharSet char_set;
-        while (peek() != ']') {
-            auto curr = parse_atom();
-            if (ErrorAtom == curr)
-                return nullptr;
+            switch (advance()) {
+                case '|': return Result('|');
+                case '.': return Result('.');
+                case '\\': return Result('\\');
+                case 't': return Result('\t');
+                case 'r': return Result('\r');
+                case 'n': return Result('\n');
+                case 'd':
+                case 'D':
+                case 'w':
+                case 'W':
+                case 's':
+                case 'S':
+                    // @NOTE: Illegal escape sequence (not allowed in character
+                    // classes)
+                    return {};
+                case 'u': {
+                    if (not can_peek())
+                        return {};
+                    const auto a = advance();
 
-            if (peek() == '-') {
-                advance();
+                    if (not can_peek())
+                        return {};
+                    const auto b = advance();
 
-                auto next = parse_atom();
-                if (ErrorAtom == next)
-                    return nullptr;
-
-                char_set.set(u8(curr), u8(next), true);
-            } else {
-                char_set.set(u8(curr), true);
+                    u8 d0, d1;
+                    if (not unhex(d0, a))
+                        return {};
+                    if (not unhex(d1, b))
+                        return {};
+                    return Result(u8(d0 * 16 + d1));
+                }
             }
         }
-        advance();
 
-        if (negate)
-            char_set.negate();
+        return Result(advance());
+    };
 
-        return create_reg_exp<Atom>(std::move(char_set));
+    if (peek() == '-') {
+        advance();  //'-'
+        return CharSet('-');
     }
 
-    if (peek() == '(') {
-        advance();
-        auto exp = parse_alternative();
-        if (peek() != ')') {
-            debug_log("Expected `)`, but got `", peek(), "`\n");
-            return nullptr;
+    if (auto a = parse_class_char(); a.ok) {
+        if (peek() == '-') {
+            advance();  // '-'
+            if (peek() == ']')
+                return CharSet('-');
+
+            if (auto b = parse_class_char(); b.ok)
+                return { a.value, b.value };
+
+            // @NOTE: Unexpected character in class: expected ']' or
+            // `class_char`
+            return {};
         }
-        advance();
-        return exp;
+
+        return CharSet(a.value);
     }
 
-    debug_log("Expected primary expression, but got `", peek(), "`\n");
-    return nullptr;
+    return {};
 }
 
 bool RegexParser::can_peek() const
