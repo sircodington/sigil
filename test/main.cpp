@@ -27,6 +27,13 @@ static void char_set_tests()
             assert(complete.contains(i));
         }
     }
+
+    const auto set = [](u8 first, u8 last) {
+        return sigil::CharSet(first, last);
+    };
+    assert((set('a', 's') | set('k', 'z')) == set('a', 'z'));
+    assert((set('a', 's') & set('k', 'z')) == set('k', 's'));
+    assert((set('a', 's') / set('k', 'z')) == set('a', 'j'));
 }
 
 String parse_regex(const StringView &regex_pattern)

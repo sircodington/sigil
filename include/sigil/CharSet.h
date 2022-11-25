@@ -38,6 +38,10 @@ public:
     void negate();
 
     CharSet operator~() const;
+    CharSet operator|(CharSet other) const;
+    CharSet operator&(CharSet other) const;
+    CharSet operator/(CharSet other) const;
+
 private:
     constexpr static auto Size = std::numeric_limits<u8>::max() + 1;
     BitField<Size> m_included;

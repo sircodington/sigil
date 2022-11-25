@@ -52,6 +52,36 @@ CharSet CharSet::operator~() const
     return result;
 }
 
+template<typename BiPredicate>
+inline static CharSet binary_operation(
+    CharSet a, CharSet b, BiPredicate predicate)
+{
+    CharSet result;
+    for (auto i = CharSet::first; i <= CharSet::last; ++i) {
+        result.set(i, predicate(a.contains(i), b.contains(i)));
+    }
+    return result;
+}
+
+CharSet CharSet::operator|(CharSet other) const
+{
+    return binary_operation(
+        *this, other, [](bool a, bool b) { return a or b; });
+}
+
+CharSet CharSet::operator&(CharSet other) const
+{
+    return binary_operation(
+        *this, other, [](bool a, bool b) { return a and b; });
+}
+
+
+CharSet CharSet::operator/(CharSet other) const
+{
+    return binary_operation(
+        *this, other, [](bool a, bool b) { return a and not b; });
+}
+
 }  // namespace sigil
 
 namespace core {
