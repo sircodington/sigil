@@ -259,6 +259,10 @@ CharSet RegexParser::parse_top_level_chars()
         if (not can_peek())
             return {};
 
+        static CharSet Digit('0', '9');
+        static auto Word =
+            CharSet('a', 'z') | CharSet('A', 'Z') | Digit | CharSet('_');
+
         switch (advance()) {
             case '|': return CharSet('|');
             case '.': return CharSet('.');
@@ -266,8 +270,10 @@ CharSet RegexParser::parse_top_level_chars()
             case 't': return CharSet('\t');
             case 'r': return CharSet('\r');
             case 'n': return CharSet('\n');
-            case 'd': return { '0', '9' };
-            case 'D': return ~CharSet('0', '9');
+            case 'd': return Digit;
+            case 'D': return ~Digit;
+            case 'w': return Word;
+            case 'W': return ~Word;
             case 'u': {
                 if (not can_peek())
                     return {};
@@ -350,6 +356,8 @@ CharSet RegexParser::parse_class_chars()
                 case 'n': return Result('\n');
                 case 'd':
                 case 'D':
+                case 'w':
+                case 'W':
                     // @NOTE: Illegal escape sequence ('\d' is not allowed in
                     // character classes)
                     return {};
