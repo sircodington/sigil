@@ -62,7 +62,7 @@ inline static bool can_be_class_atom(u8 c);
 inline static bool can_be_top_level_atom(u8 c);
 inline static bool can_be_atom(u8 c);
 
-inline static bool unhex(u8 &result, char c)
+inline static bool unhex(u8 &result, u8 c)
 {
     if (not(between('a', c, 'f') or between('A', c, 'F') or
             between('0', c, '9')))
@@ -464,13 +464,13 @@ bool RegexParser::can_peek() const
     return m_offset < m_input.size();
 }
 
-char RegexParser::peek()
+u8 RegexParser::peek()
 {
     assert(can_peek());
     return m_input[m_offset];
 }
 
-char RegexParser::advance()
+u8 RegexParser::advance()
 {
     const auto c = peek();
     ++m_offset;
