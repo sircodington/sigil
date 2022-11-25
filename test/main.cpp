@@ -19,6 +19,14 @@ static void char_set_tests()
         sigil::CharSet empty;
         assert(empty.is_empty());
     }
+
+    {
+        auto complete = ~sigil::CharSet();
+        assert(complete.non_empty());
+        for (auto i = sigil::CharSet::first; i <= sigil::CharSet::last; ++i) {
+            assert(complete.contains(i));
+        }
+    }
 }
 
 String parse_regex(const StringView &regex_pattern)

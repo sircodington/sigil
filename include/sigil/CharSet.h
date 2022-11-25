@@ -37,6 +37,7 @@ public:
     void set(u8 first, u8 last, bool);
     void negate();
 
+    CharSet operator~() const;
 private:
     constexpr static auto Size = std::numeric_limits<u8>::max() + 1;
     BitField<Size> m_included;

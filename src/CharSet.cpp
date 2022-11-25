@@ -45,6 +45,13 @@ void CharSet::negate()
         set(i, not contains(i));
 }
 
+CharSet CharSet::operator~() const
+{
+    CharSet result = *this;
+    result.negate();
+    return result;
+}
+
 }  // namespace sigil
 
 namespace core {
