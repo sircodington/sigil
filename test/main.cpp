@@ -7,10 +7,19 @@
 #include <core/Formatting.h>
 #include <core/Test.h>
 
+#include <sigil/CharSet.h>
 #include <sigil/DfaSimulation.h>
 #include <sigil/DfaTableScannerDriver.h>
 #include <sigil/RegExp.h>
 #include <sigil/RegexParser.h>
+
+static void char_set_tests()
+{
+    {
+        sigil::CharSet empty;
+        assert(empty.is_empty());
+    }
+}
 
 String parse_regex(const StringView &regex_pattern)
 {
@@ -240,6 +249,7 @@ static void user_controlled_token_values()
 
 void sigil_tests()
 {
+    char_set_tests();
     regex_parser_tests();
     dfa_simulation_tests_calculator();
     dfa_simulation_tests_conflict();
