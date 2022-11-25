@@ -267,6 +267,7 @@ CharSet RegexParser::parse_top_level_chars()
             case 'r': return CharSet('\r');
             case 'n': return CharSet('\n');
             case 'd': return { '0', '9' };
+            case 'D': return ~CharSet('0', '9');
             case 'u': {
                 if (not can_peek())
                     return {};
@@ -348,6 +349,7 @@ CharSet RegexParser::parse_class_chars()
                 case 'r': return Result('\r');
                 case 'n': return Result('\n');
                 case 'd':
+                case 'D':
                     // @NOTE: Illegal escape sequence ('\d' is not allowed in
                     // character classes)
                     return {};

@@ -104,6 +104,10 @@ static void regex_parser_tests()
     expect_eq(parse_regex("\\d"), "Atom('0' - '9')");
     // @FIXME: Replace be real error, once we properly propagate failure
     expect_eq(parse_regex("[\\d]"), "Parse error: Parse error");
+
+    expect_eq(parse_regex("\\D"), "Atom('\\u0' - '/', ':' - '\\uFF')");
+    // @FIXME: Replace be real error, once we properly propagate failure
+    expect_eq(parse_regex("[\\D]"), "Parse error: Parse error");
 }
 
 static void dfa_simulation_tests_calculator()
