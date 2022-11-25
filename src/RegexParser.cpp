@@ -214,7 +214,9 @@ inline static bool can_be_top_level_atom(u8 c)
         case '-':
         case ':':
         case '/':
-        case '_': return true;
+        case '_':
+        case '^':
+        case '$': return true;
         default: return false;
     }
 }
@@ -230,6 +232,12 @@ CharSet RegexParser::parse_top_level_chars()
     if (peek() == '-') {
         advance();  // '-'
         return CharSet('-');
+    }
+    if (peek() == '^') {
+        assert(false and "Anchors are not implemented!");
+    }
+    if (peek() == '$') {
+        assert(false and "Anchors are not implemented!");
     }
 
     if (peek() == '\\') {
@@ -250,6 +258,8 @@ CharSet RegexParser::parse_top_level_chars()
             case 't': return CharSet('\t');
             case 'r': return CharSet('\r');
             case 'n': return CharSet('\n');
+            case '^': return CharSet('^');
+            case '$': return CharSet('$');
             case 'd': return Digit;
             case 'D': return ~Digit;
             case 'w': return Word;
@@ -295,7 +305,9 @@ inline static bool can_be_class_atom(u8 c)
         case '-':
         case ':':
         case '/':
-        case '_': return true;
+        case '_':
+        case '^':
+        case '$': return true;
         default: return false;
     }
 }
@@ -322,6 +334,14 @@ CharSet RegexParser::parse_class_chars()
             advance();  // '.'
             return Result('.');
         }
+        if (peek() == '^') {
+            advance();  // '^'
+            return Result('^');
+        }
+        if (peek() == '$') {
+            advance();  // '$'
+            return Result('$');
+        }
 
         if (peek() == '\\') {
             advance();  // '\\'
@@ -336,6 +356,8 @@ CharSet RegexParser::parse_class_chars()
                 case 't': return Result('\t');
                 case 'r': return Result('\r');
                 case 'n': return Result('\n');
+                case '^': return Result('^');
+                case '$': return Result('$');
                 case 'd':
                 case 'D':
                 case 'w':
