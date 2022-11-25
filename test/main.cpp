@@ -118,6 +118,16 @@ static void regex_parser_tests()
         "Atom('\\u0' - '/', ':' - '@', '[' - '^', '`', '{' - '\\uFF')");
     // @FIXME: Replace be real error, once we properly propagate failure
     expect_eq(parse_regex("[\\W]"), "Parse error: Parse error");
+
+    expect_eq(parse_regex("\\s"), "Atom('\\t' - '\\r', ' ')");
+    // @FIXME: Replace be real error, once we properly propagate failure
+    expect_eq(parse_regex("[\\s]"), "Parse error: Parse error");
+
+    expect_eq(
+        parse_regex("\\S"),
+        "Atom('\\u0' - '\\u8', '\\uE' - '\\u1F', '!' - '\\uFF')");
+    // @FIXME: Replace be real error, once we properly propagate failure
+    expect_eq(parse_regex("[\\S]"), "Parse error: Parse error");
 }
 
 static void dfa_simulation_tests_calculator()
