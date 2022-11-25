@@ -47,8 +47,8 @@ private:
 
     // @TODO: This might be a bit nicer when using Option<char>
     [[nodiscard]] bool can_peek() const;
-    char peek();
-    char advance();
+    u8 peek();
+    u8 advance();
 
     core::Arena &m_arena;
     s64 m_offset { -1 };
