@@ -128,6 +128,21 @@ static void regex_parser_tests()
         "Atom('\\u0' - '\\u8', '\\uE' - '\\u1F', '!' - '\\uFF')");
     // @FIXME: Replace be real error, once we properly propagate failure
     expect_eq(parse_regex("[\\S]"), "Parse error: Parse error");
+
+    // Floating point numbers
+    expect_eq(
+        parse_regex(R"END(([eE][+-]?\d+)?)END"sv),
+        "Optional(Concatenation(Concatenation(Atom('E', 'e'), "
+        "Optional(Atom('+', '-'))), PositiveKleene(Atom('0' - '9'))))"sv);
+    expect_eq(
+        parse_regex(R"END((\d+(\.\d*)?|\d*\.\d+)([eE][+-]?\d+)?[#!]?)END"sv),
+        "Concatenation(Concatenation(Alternative(Concatenation(PositiveKleene("
+        "Atom('0' - '9')), Optional(Concatenation(Atom('.'), Kleene(Atom('0' - "
+        "'9'))))), Concatenation(Concatenation(Kleene(Atom('0' - '9')), "
+        "Atom('.')), PositiveKleene(Atom('0' - '9')))), "
+        "Optional(Concatenation(Concatenation(Atom('E', 'e'), "
+        "Optional(Atom('+', '-'))), PositiveKleene(Atom('0' - '9'))))), "
+        "Optional(Atom('!', '#')))"sv);
 }
 
 static void dfa_simulation_tests_calculator()
@@ -229,6 +244,40 @@ static void dfa_simulation_tests_conflict()
         simulate(grammar, "Test_3"), SimulationResult::accept("Identifier"));
 }
 
+static void dfa_simulation_float_literals()
+{
+    enum class Type : s32
+    {
+        Eof = s32(sigil::SpecialTokenType::Eof),
+        Error = s32(sigil::SpecialTokenType::Error),
+        IntLit,
+        FloatLit,
+    };
+    sigil::Specification spec;
+    spec.add_regex_token((s32)Type::IntLit, "IntLit", "\\d+"sv);
+    spec.add_regex_token(
+        (s32)Type::FloatLit,
+        "FloatLit",
+        R"END((\d+(\.\d*)?|\d*\.\d+)([eE][+-]?\d+)?)END"sv);
+
+    auto either_grammar = sigil::Grammar::compile(spec);
+    if (not either_grammar.isRight()) {
+        debug_log("Error: ", either_grammar.left(), "\n");
+        return;
+    }
+
+    auto grammar = std::move(either_grammar.release_right());
+
+    using namespace sigil::dfa;
+
+    expect_eq(simulate(grammar, "5"), SimulationResult::accept("IntLit"));
+    expect_eq(simulate(grammar, "1."), SimulationResult::accept("FloatLit"));
+    expect_eq(simulate(grammar, ".1"), SimulationResult::accept("FloatLit"));
+    expect_eq(simulate(grammar, "1e2"), SimulationResult::accept("FloatLit"));
+    expect_eq(simulate(grammar, "1e-2"), SimulationResult::accept("FloatLit"));
+    expect_eq(simulate(grammar, "1e+2"), SimulationResult::accept("FloatLit"));
+}
+
 static void scanner_detect_eof_instead_of_error()
 {
     enum class TokenType : int8_t
@@ -300,6 +349,7 @@ void sigil_tests()
     regex_parser_tests();
     dfa_simulation_tests_calculator();
     dfa_simulation_tests_conflict();
+    dfa_simulation_float_literals();
     scanner_detect_eof_instead_of_error();
     user_controlled_token_values();
 }
