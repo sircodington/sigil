@@ -244,6 +244,40 @@ static void dfa_simulation_tests_conflict()
         simulate(grammar, "Test_3"), SimulationResult::accept("Identifier"));
 }
 
+static void dfa_simulation_float_literals()
+{
+    enum class Type : s32
+    {
+        Eof = s32(sigil::SpecialTokenType::Eof),
+        Error = s32(sigil::SpecialTokenType::Error),
+        IntLit,
+        FloatLit,
+    };
+    sigil::Specification spec;
+    spec.add_regex_token((s32)Type::IntLit, "IntLit", "\\d+"sv);
+    spec.add_regex_token(
+        (s32)Type::FloatLit,
+        "FloatLit",
+        R"END((\d+(\.\d*)?|\d*\.\d+)([eE][+-]?\d+)?)END"sv);
+
+    auto either_grammar = sigil::Grammar::compile(spec);
+    if (not either_grammar.isRight()) {
+        debug_log("Error: ", either_grammar.left(), "\n");
+        return;
+    }
+
+    auto grammar = std::move(either_grammar.release_right());
+
+    using namespace sigil::dfa;
+
+    expect_eq(simulate(grammar, "5"), SimulationResult::accept("IntLit"));
+    expect_eq(simulate(grammar, "1."), SimulationResult::accept("FloatLit"));
+    expect_eq(simulate(grammar, ".1"), SimulationResult::accept("FloatLit"));
+    expect_eq(simulate(grammar, "1e2"), SimulationResult::accept("FloatLit"));
+    expect_eq(simulate(grammar, "1e-2"), SimulationResult::accept("FloatLit"));
+    expect_eq(simulate(grammar, "1e+2"), SimulationResult::accept("FloatLit"));
+}
+
 static void scanner_detect_eof_instead_of_error()
 {
     enum class TokenType : int8_t
@@ -315,6 +349,7 @@ void sigil_tests()
     regex_parser_tests();
     dfa_simulation_tests_calculator();
     dfa_simulation_tests_conflict();
+    dfa_simulation_float_literals();
     scanner_detect_eof_instead_of_error();
     user_controlled_token_values();
 }
