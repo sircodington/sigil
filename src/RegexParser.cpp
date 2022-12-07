@@ -495,7 +495,7 @@ CharSet RegexParser::parse_class_chars()
         if (peek() == '-') {
             advance();  // '-'
             if (peek() == ']')
-                return CharSet('-');
+                return CharSet(a.value) | CharSet('-');
 
             if (auto b = parse_class_char(); b.ok)
                 return { a.value, b.value };

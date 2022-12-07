@@ -128,6 +128,21 @@ static void regex_parser_tests()
         "Atom('\\u0' - '\\u8', '\\uE' - '\\u1F', '!' - '\\uFF')");
     // @FIXME: Replace be real error, once we properly propagate failure
     expect_eq(parse_regex("[\\S]"), "Parse error: Parse error");
+
+    // Floating point numbers
+    expect_eq(
+        parse_regex(R"END(([eE][+-]?\d+)?)END"sv),
+        "Optional(Concatenation(Concatenation(Atom('E', 'e'), "
+        "Optional(Atom('+', '-'))), PositiveKleene(Atom('0' - '9'))))"sv);
+    expect_eq(
+        parse_regex(R"END((\d+(\.\d*)?|\d*\.\d+)([eE][+-]?\d+)?[#!]?)END"sv),
+        "Concatenation(Concatenation(Alternative(Concatenation(PositiveKleene("
+        "Atom('0' - '9')), Optional(Concatenation(Atom('.'), Kleene(Atom('0' - "
+        "'9'))))), Concatenation(Concatenation(Kleene(Atom('0' - '9')), "
+        "Atom('.')), PositiveKleene(Atom('0' - '9')))), "
+        "Optional(Concatenation(Concatenation(Atom('E', 'e'), "
+        "Optional(Atom('+', '-'))), PositiveKleene(Atom('0' - '9'))))), "
+        "Optional(Atom('!', '#')))"sv);
 }
 
 static void dfa_simulation_tests_calculator()
