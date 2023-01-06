@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021, Jan Sladek <keddelzz@web.de>
+// Copyright (c) 2021-2023, Jan Sladek <keddelzz@web.de>
 //
 // SPDX-License-Identifier: BSD-2-Clause
 //
@@ -49,11 +49,16 @@ DfaTableScannerDriver DfaTableScannerDriver::create(const dfa::Automaton &dfa)
             accepting[state->id] = state->token_type;
     }
 
+    auto transitions_array = Array<State>::list_view(transitions.to_view());
+    auto accepting_array = Array<TokenType>::list_view(accepting.to_view());
     StaticTable static_table(
-        start_state, error_state, transitions.to_view(), accepting.to_view());
-    StaticTableScannerDriver underlying(static_table);
-    return DfaTableScannerDriver(
-        std::move(transitions), std::move(accepting), std::move(underlying));
+        start_state, error_state, transitions_array, accepting_array);
+    StaticTableScannerDriver static_scanner_driver(static_table);
+    DfaTableScannerDriver scanner_driver(
+        std::move(transitions),
+        std::move(accepting),
+        std::move(static_scanner_driver));
+    return scanner_driver;
 }
 
 }  // namespace sigil

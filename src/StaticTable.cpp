@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021, Jan Sladek <keddelzz@web.de>
+// Copyright (c) 2021-2023, Jan Sladek <keddelzz@web.de>
 //
 // SPDX-License-Identifier: BSD-2-Clause
 //
@@ -13,8 +13,8 @@ namespace sigil {
 StaticTable::StaticTable(
     State start_state,
     State error_state,
-    ListView<State> transitions,
-    ListView<TokenType> accepting)
+    Array<State> transitions,
+    Array<TokenType> accepting)
     : m_start_state(start_state)
     , m_error_state(error_state)
     , m_transitions(transitions)
@@ -27,71 +27,43 @@ StaticTable::StaticTable(
 namespace core {
 
 template<typename T>
-inline static void format_array_literal(
-    StringBuilder &b, const ListView<T> &view)
+inline static void format_sigil_array(
+    StringBuilder &b, core::StringView type, const sigil::Array<T> &array)
 {
-    Formatting::format_into(b, "{");
-
-    auto first = true;
-    for (const auto &elem : view) {
-        if (not first)
-            Formatting::format_into(b, ",");
-        first = false;
-
-        Formatting::format_into(b, elem);
+    Formatting::format_into(b, "sigil::Array<"sv, type, ">::string_literal("sv);
+    constexpr char HexDigit[] = "0123456789ABCDEF";
+    b.append('"');
+    const auto *p = reinterpret_cast<const u8 *>(array.data());
+    for (auto i = 0; i < array.size() * sizeof(T); ++i) {
+        b.append(R"(\x)"sv);
+        b.append(HexDigit[p[i] / 16]);
+        b.append(HexDigit[p[i] % 16]);
     }
-
-    Formatting::format_into(b, "}");
-}
-
-inline static void format_list_view(
-    StringBuilder &b,
-    const StringView &element_type,
-    const StringView &data_member)
-{
-    Formatting::format_into(
-        b,
-        "core::ListView<",
-        element_type,
-        ">(",
-        data_member,
-        ",",
-        "sizeof(",
-        data_member,
-        ") / sizeof(",
-        data_member,
-        "[0])",
-        ")");
+    b.append('"');
+    Formatting::format_into(b, ","sv, array.size(), ")"sv);
 }
 
 void Formatter<sigil::StaticTable>::format(
     StringBuilder &b, const sigil::StaticTable &table)
 {
-    Formatting::format_into(b, "({");
+    Formatting::format_into(b, "({"sv);
 
-    const StringView transition_table_data_member("transitions");
-    Formatting::format_into(
-        b, "sigil::State ", transition_table_data_member, "[] = ");
-    format_array_literal(b, table.transitions());
-    Formatting::format_into(b, ";");
+    Formatting::format_into(b, "const auto transitions = "sv);
+    format_sigil_array(b, "sigil::State"sv, table.transitions());
+    Formatting::format_into(b, ";"sv);
 
-    const StringView accepting_table_data_member("accepting");
-    Formatting::format_into(
-        b, "sigil::TokenType ", accepting_table_data_member, "[] = ");
-    format_array_literal(b, table.accepting());
-    Formatting::format_into(b, ";");
+    Formatting::format_into(b, "const auto accepting = "sv);
+    format_sigil_array(b, "sigil::TokenType"sv, table.accepting());
+    Formatting::format_into(b, ";"sv);
 
     Formatting::format_into(
         b,
-        "sigil::StaticTable(",
+        "sigil::StaticTable("sv,
         table.start_state(),
-        ",",
+        ","sv,
         table.error_state(),
-        ",");
-    format_list_view(b, "sigil::State", transition_table_data_member);
-    Formatting::format_into(b, ",");
-    format_list_view(b, "sigil::TokenType", accepting_table_data_member);
-    Formatting::format_into(b, ");})");
+        ",transitions,accepting);"sv);
+    Formatting::format_into(b, "})"sv);
 }
 
 }  // namespace core

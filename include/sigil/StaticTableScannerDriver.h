@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021, Jan Sladek <keddelzz@web.de>
+// Copyright (c) 2021-2023, Jan Sladek <keddelzz@web.de>
 //
 // SPDX-License-Identifier: BSD-2-Clause
 //
@@ -54,8 +54,8 @@ private:
 
     State m_start_state;
     State m_error_state;
-    ListView<State> m_transitions;
-    ListView<TokenType> m_accepting;
+    Array<State> m_transitions;
+    Array<TokenType> m_accepting;
 };
 
 }  // namespace sigil

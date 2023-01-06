@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021, Jan Sladek <keddelzz@web.de>
+// Copyright (c) 2021-2023, Jan Sladek <keddelzz@web.de>
 //
 // SPDX-License-Identifier: BSD-2-Clause
 //
@@ -9,6 +9,7 @@
 #include <core/Formatter.h>
 #include <core/ListView.h>
 
+#include <sigil/Array.h>
 #include <sigil/Types.h>
 
 namespace sigil {
@@ -20,19 +21,19 @@ public:
     StaticTable(
         State start_state,
         State error_state,
-        ListView<State> transitions,
-        ListView<TokenType> accepting);
+        Array<State> transitions,
+        Array<TokenType> accepting);
 
     [[nodiscard]] State start_state() const { return m_start_state; }
     [[nodiscard]] State error_state() const { return m_error_state; }
-    [[nodiscard]] ListView<State> transitions() const { return m_transitions; }
-    [[nodiscard]] ListView<TokenType> accepting() const { return m_accepting; }
+    [[nodiscard]] Array<State> transitions() const { return m_transitions; }
+    [[nodiscard]] Array<TokenType> accepting() const { return m_accepting; }
 
 private:
     State m_start_state;
     State m_error_state;
-    ListView<State> m_transitions;
-    ListView<TokenType> m_accepting;
+    Array<State> m_transitions;
+    Array<TokenType> m_accepting;
 };
 
 }  // namespace sigil
