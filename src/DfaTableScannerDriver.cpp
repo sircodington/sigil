@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021, Jan Sladek <keddelzz@web.de>
+// Copyright (c) 2021-2023, Jan Sladek <keddelzz@web.de>
 //
 // SPDX-License-Identifier: BSD-2-Clause
 //
@@ -26,8 +26,12 @@ DfaTableScannerDriver DfaTableScannerDriver::create(const dfa::Automaton &dfa)
     const auto state_count = dfa.states().size();
     constexpr auto char_count = std::numeric_limits<u8>::max() + 1;
     const auto transition_count = state_count * char_count;
+
     List<State> transitions(transition_count);
+    static_assert(std::is_same_v<State, u32>);
+
     List<TokenType> accepting(state_count);
+    static_assert(std::is_same_v<TokenType, s32>);
 
     for (Index i = 0; i < transition_count; ++i) transitions.add(error_state);
     for (Index i = 0; i < state_count; ++i)
@@ -49,11 +53,16 @@ DfaTableScannerDriver DfaTableScannerDriver::create(const dfa::Automaton &dfa)
             accepting[state->id] = state->token_type;
     }
 
+    auto transitions_array = Array<State>::list_view(transitions.to_view());
+    auto accepting_array = Array<TokenType>::list_view(accepting.to_view());
     StaticTable static_table(
-        start_state, error_state, transitions.to_view(), accepting.to_view());
-    StaticTableScannerDriver underlying(static_table);
-    return DfaTableScannerDriver(
-        std::move(transitions), std::move(accepting), std::move(underlying));
+        start_state, error_state, transitions_array, accepting_array);
+    StaticTableScannerDriver static_scanner_driver(static_table);
+    DfaTableScannerDriver scanner_driver(
+        std::move(transitions),
+        std::move(accepting),
+        std::move(static_scanner_driver));
+    return scanner_driver;
 }
 
 }  // namespace sigil
