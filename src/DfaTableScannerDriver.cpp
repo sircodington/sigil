@@ -26,8 +26,12 @@ DfaTableScannerDriver DfaTableScannerDriver::create(const dfa::Automaton &dfa)
     const auto state_count = dfa.states().size();
     constexpr auto char_count = std::numeric_limits<u8>::max() + 1;
     const auto transition_count = state_count * char_count;
+
     List<State> transitions(transition_count);
+    static_assert(std::is_same_v<State, u32>);
+
     List<TokenType> accepting(state_count);
+    static_assert(std::is_same_v<TokenType, s32>);
 
     for (Index i = 0; i < transition_count; ++i) transitions.add(error_state);
     for (Index i = 0; i < state_count; ++i)
