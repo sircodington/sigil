@@ -43,7 +43,7 @@ set(${PROJECT_NAME}_SOURCES
     src/StaticTableScannerDriver.cpp
 )
 
-add_library(${PROJECT_NAME} SHARED
+add_library(${PROJECT_NAME}
     ${${PROJECT_NAME}_HEADERS}
     ${${PROJECT_NAME}_SOURCES}
 )
